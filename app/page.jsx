@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 
 /* ── FONTS ── */
@@ -463,6 +465,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [loadStep, setLoadStep] = useState(0);
   const [err, setErr] = useState("");
+  const [openPh, setOpenPh] = useState({0:true,1:false,2:false,3:false});
 
   const tracks = ["ai","ops","growth"];
   const curTrack = CORE[track];
@@ -587,10 +590,10 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
 }`;
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages",{
+      const res = await fetch("/api/assess",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1800,messages:[{role:"user",content:prompt}]})
+        body:JSON.stringify({prompt})
       });
       const data = await res.json();
       const txt = data.content?.find(b=>b.type==="text")?.text||"";
@@ -797,7 +800,6 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
 
           {/* ── RESULTS ── */}
           {step==="results"&&results&&(()=>{
-            const [openPh,setOpenPh]=useState({0:true,1:false,2:false,3:false});
             const togPh=i=>setOpenPh(p=>({...p,[i]:!p[i]}));
             return (
               <div>
@@ -941,7 +943,7 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
                   <p className="cta-desc">Book a free 20-minute strategy call to review your top recommendations and identify the one change that will have the biggest impact on your business this month.</p>
                   <div className="cta-btns">
                     <button className="btn-p">Book Free Strategy Call →</button>
-                    <button className="btn-s" onClick={()=>{setStep("intro");setAns({ai:{},ops:{},growth:{},deep:{}});setTrack(0);setResults(null);setBiz({company:"",industry:"",size:"",role:"",email:""})}}>Start Over</button>
+                    <button className="btn-s" onClick={()=>{setStep("intro");setAns({ai:{},ops:{},growth:{},deep:{}});setTrack(0);setResults(null);setBiz({company:"",industry:"",size:"",role:"",email:""});setOpenPh({0:true,1:false,2:false,3:false})}}>Start Over</button>
                   </div>
                 </div>
 
