@@ -587,7 +587,12 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
 }`;
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages",{
+      const res = await fetch("/api/assess", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ prompt }),
+})
+const data = await res.json()
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1800,messages:[{role:"user",content:prompt}]})
