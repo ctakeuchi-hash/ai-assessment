@@ -586,29 +586,22 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
   ]
 }`;
 
-    try {
-      const res = await fetch("/api/assess", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ prompt }),
-})
-const data = await res.json()
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1800,messages:[{role:"user",content:prompt}]})
-      });
-      const data = await res.json();
-      const txt = data.content?.find(b=>b.type==="text")?.text||"";
-      const clean = txt.replace(/```json|```/g,"").trim();
-      const parsed = JSON.parse(clean);
-      setResults({aiS,opsS,grS,total,aiM,opsM,grM,...parsed});
-      setStep("results");
-    } catch(e) {
-      setErr("Something went wrong. Please try again.");
-      setStep("email");
-    } finally { setLoading(false); }
-  };
-
+try {
+  const res = await fetch("/api/assess", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt }),
+  });
+  const data = await res.json();
+  const txt = data.content?.find(b => b.type === "text")?.text || "";
+  const clean = txt.replace(/```json|```/g, "").trim();
+  const parsed = JSON.parse(clean);
+  setResults({ aiS, opsS, grS, total, aiM, opsM, grM, ...parsed });
+  setStep("results");
+} catch(e) {
+  setErr("Something went wrong. Please try again.");
+  setStep("email");
+} finally { setLoading(false); }
   const stepIdx = {intro:0,bizinfo:1,track:2+track,deep:5,email:6}[step]??7;
 
   return (
