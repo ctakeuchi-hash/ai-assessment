@@ -601,6 +601,18 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
       const parsed = JSON.parse(clean);
       setResults({aiS,opsS,grS,total,aiM,opsM,grM,...parsed});
       setStep("results");
+
+      /* save lead to Airtable (fire-and-forget, don't block UI) */
+      fetch("/api/save-lead",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          email:biz.email, company:biz.company, industry:biz.industry,
+          size:biz.size, role:biz.role,
+          scores:{ai:aiS, ops:opsS, growth:grS, overall:total},
+          report: parsed.summary || ""
+        })
+      }).catch(()=>{});
     } catch(e) {
       setErr("Something went wrong. Please try again.");
       setStep("email");
