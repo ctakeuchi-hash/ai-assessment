@@ -22,15 +22,38 @@ export interface TranscriptSegment {
 
 export interface CopilotSuggestion {
   id: string;
-  type: 'solution' | 'question' | 'workflow' | 'warning';
+  type: 'solution' | 'question' | 'workflow' | 'warning' | 'closing';
   headline: string;
   detail: string;
   confidence: 'high' | 'medium' | 'low';
   triggeredBy: string;
   timestamp: number;
+  // enriched fields (present on solution/workflow suggestions)
+  currentState?: string;
+  proposedSolution?: string;
+  pricingTier?: string;
+  keyBenefit?: string;
+  likelyObjection?: string;
+  objectionResponse?: string;
 }
 
 export interface CopilotContext {
   systemPrompt: string;
   knowledgeBase: string;
+}
+
+export interface ProcessArea {
+  area: string;
+  currentState: string;
+  maturity: 'beginner' | 'developing' | 'growing' | 'advanced';
+  painPoints: string[];
+  opportunitySize: 'low' | 'medium' | 'high';
+}
+
+export interface CurrentStateMap {
+  updatedAt: number;
+  processes: ProcessArea[];
+  technologyMentioned: string[];
+  budgetSignals: string[];
+  timelineSignals: string[];
 }

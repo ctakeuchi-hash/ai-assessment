@@ -1,4 +1,4 @@
-import type { CopilotContext, CopilotSuggestion, Workflow } from '@/types';
+import type { CopilotContext, CopilotSuggestion, CurrentStateMap, Workflow } from '@/types';
 
 export async function generateWorkflow(description: string): Promise<Workflow> {
   const res = await fetch('/api/workflow', {
@@ -31,6 +31,18 @@ export async function getMeetingSummary(transcript: string): Promise<MeetingSumm
 
   if (!res.ok) throw new Error(`Summarize API error: ${res.status}`);
   return res.json() as Promise<MeetingSummary>;
+}
+
+export async function extractCurrentState(transcript: string): Promise<CurrentStateMap> {
+  const res = await fetch('/api/extract-state', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ transcript }),
+  });
+
+  if (!res.ok) throw new Error(`Extract state API error: ${res.status}`);
+  const data = await res.json();
+  return { ...data, updatedAt: Date.now() } as CurrentStateMap;
 }
 
 export async function getCopilotSuggestions(
