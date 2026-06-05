@@ -15,6 +15,24 @@ export async function generateWorkflow(description: string): Promise<Workflow> {
   return data as Workflow;
 }
 
+export interface MeetingSummary {
+  tldr: string;
+  topics: { heading: string; bullets: string[] }[];
+  clientNeeds: string[];
+  openQuestions: string[];
+}
+
+export async function getMeetingSummary(transcript: string): Promise<MeetingSummary> {
+  const res = await fetch('/api/summarize', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ transcript }),
+  });
+
+  if (!res.ok) throw new Error(`Summarize API error: ${res.status}`);
+  return res.json() as Promise<MeetingSummary>;
+}
+
 export async function getCopilotSuggestions(
   transcript: string,
   context: CopilotContext

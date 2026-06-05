@@ -1,4 +1,7 @@
-export function startTranscription(onSegment: (text: string) => void): () => void {
+export function startTranscription(
+  onSegment: (text: string) => void,
+  onInterim?: (text: string) => void,
+): () => void {
   const SpeechRecognition =
     (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
@@ -9,12 +12,20 @@ export function startTranscription(onSegment: (text: string) => void): () => voi
 
   const recognition = new SpeechRecognition();
   recognition.continuous = true;
-  recognition.interimResults = false;
+  recognition.interimResults = true;
   recognition.lang = 'en-US';
 
   recognition.onresult = (event: any) => {
-    const text = event.results[event.results.length - 1][0].transcript;
-    onSegment(text);
+    let interim = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript;
+      if (event.results[i].isFinal) {
+        onSegment(transcript.trim());
+      } else {
+        interim += transcript;
+      }
+    }
+    if (onInterim) onInterim(interim.trim());
   };
 
   recognition.onerror = (event: any) => {
