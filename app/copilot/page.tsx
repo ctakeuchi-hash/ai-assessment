@@ -9,6 +9,7 @@ import { ContextPanel } from '@/components/copilot/ContextPanel';
 import { MeetingSummary } from '@/components/copilot/MeetingSummary';
 import { ClientBrief } from '@/components/copilot/ClientBrief';
 import { startTranscription, isSpeechRecognitionSupported } from '@/lib/transcription';
+import { startDeepgramTranscription } from '@/lib/deepgram-transcription';
 import { getCopilotSuggestions, getMeetingSummary, extractCurrentState } from '@/lib/anthropic';
 import { createSession, endSession, saveSegment, saveSuggestions, updateSessionSummary, updateSessionStateMap } from '@/lib/session';
 import type { TranscriptSegment, CopilotSuggestion, CopilotContext, CurrentStateMap } from '@/types';
@@ -23,6 +24,7 @@ const STATE_EVERY_N = 15;
 type RightTab = 'suggestions' | 'brief' | 'summary';
 type LeftTab = 'transcript' | 'context';
 type Temperature = 'Cold' | 'Warm' | 'Hot';
+type TranscriptionMode = 'webspeech' | 'deepgram';
 
 function computeTemperature(suggestions: CopilotSuggestion[]): Temperature {
   let score = 0;
@@ -60,6 +62,7 @@ export default function CopilotPage() {
   const [context, setContext] = useState<CopilotContext>(DEFAULT_CONTEXT);
   const [leftTab, setLeftTab] = useState<LeftTab>('transcript');
   const [rightTab, setRightTab] = useState<RightTab>('suggestions');
+  const [transcriptionMode, setTranscriptionMode] = useState<TranscriptionMode>('deepgram');
 
   const stopFnRef = useRef<(() => void) | null>(null);
   const suggestionDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -167,11 +170,13 @@ export default function CopilotPage() {
     } else {
       const sid = await createSession();
       sessionIdRef.current = sid;
-      const stop = startTranscription(handleSegment);
+      const stop = transcriptionMode === 'deepgram'
+        ? startDeepgramTranscription(handleSegment)
+        : startTranscription(handleSegment);
       stopFnRef.current = stop;
       setRecording(true);
     }
-  }, [recording, handleSegment]);
+  }, [recording, transcriptionMode, handleSegment]);
 
   const handleReset = async () => {
     stopFnRef.current?.();
@@ -226,6 +231,32 @@ export default function CopilotPage() {
           <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#38d4a0', flex: 1 }}>
             Meeting Copilot
           </span>
+          {/* Transcription mode toggle — only when not recording */}
+          {!recording && (
+            <div style={{ display: 'flex', background: '#0e1018', border: '1px solid #1c2030', flexShrink: 0 }}>
+              {(['deepgram', 'webspeech'] as TranscriptionMode[]).map(mode => (
+                <button
+                  key={mode}
+                  onClick={() => setTranscriptionMode(mode)}
+                  style={{
+                    fontFamily: "'DM Mono', monospace",
+                    fontSize: '0.55rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    padding: '0.2rem 0.55rem',
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: transcriptionMode === mode ? '#1c2030' : 'transparent',
+                    color: transcriptionMode === mode ? '#ddd8cc' : '#3a4a60',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {mode === 'deepgram' ? 'System' : 'Mic'}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Temperature indicator — only shows once recording starts and suggestions exist */}
           {recording && suggestions.length > 0 && (() => {
             const temp = computeTemperature(suggestions);
@@ -245,9 +276,14 @@ export default function CopilotPage() {
           <MicButton recording={recording} supported={supported} onToggle={toggleRecording} />
         </div>
 
-        {!supported && (
+        {transcriptionMode === 'webspeech' && !supported && (
           <div style={{ background: '#180e02', borderBottom: '1px solid #3a2808', color: '#e8a020', fontSize: '0.78rem', padding: '0.5rem 1.25rem', flexShrink: 0 }}>
-            Requires Chrome or Edge for Web Speech API.
+            Mic mode requires Chrome or Edge. Switch to System mode for any browser.
+          </div>
+        )}
+        {transcriptionMode === 'deepgram' && !recording && (
+          <div style={{ background: '#020810', borderBottom: '1px solid #0a1830', color: '#4a9eff', fontSize: '0.72rem', padding: '0.4rem 1.25rem', flexShrink: 0, fontFamily: "'DM Mono', monospace", letterSpacing: '0.04em' }}>
+            System mode: browser will ask what to share → select your screen or app with "Share audio" checked.
           </div>
         )}
 
