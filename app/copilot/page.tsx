@@ -10,6 +10,7 @@ import { MeetingSummary } from '@/components/copilot/MeetingSummary';
 import { ClientBrief } from '@/components/copilot/ClientBrief';
 import { startTranscription, isSpeechRecognitionSupported } from '@/lib/transcription';
 import { getCopilotSuggestions, getMeetingSummary, extractCurrentState } from '@/lib/anthropic';
+import { createSession, endSession, saveSegment, saveSuggestions, updateSessionSummary, updateSessionStateMap } from '@/lib/session';
 import type { TranscriptSegment, CopilotSuggestion, CopilotContext, CurrentStateMap } from '@/types';
 import type { MeetingSummary as SummaryType } from '@/lib/anthropic';
 
@@ -45,6 +46,9 @@ export default function CopilotPage() {
   const fullTranscriptRef = useRef('');
   const lastSummarizedAtRef = useRef(0);
   const lastExtractedAtRef = useRef(0);
+  const sessionIdRef = useRef<string | null>(null);
+  const summaryRef = useRef<SummaryType | null>(null);
+  const currentStateMapRef = useRef<CurrentStateMap | null>(null);
 
   // Load context from localStorage
   useEffect(() => {
@@ -61,12 +65,17 @@ export default function CopilotPage() {
     } catch {}
   }, [context]);
 
+  // Keep refs in sync for use in cleanup
+  useEffect(() => { summaryRef.current = summary; }, [summary]);
+  useEffect(() => { currentStateMapRef.current = currentStateMap; }, [currentStateMap]);
+
   const triggerSummary = useCallback(async (transcript: string) => {
     if (summarizing || transcript.trim().length < 80) return;
     setSummarizing(true);
     try {
       const s = await getMeetingSummary(transcript);
       setSummary(s);
+      if (sessionIdRef.current) await updateSessionSummary(sessionIdRef.current, s);
     } catch {}
     setSummarizing(false);
   }, [summarizing]);
@@ -78,6 +87,7 @@ export default function CopilotPage() {
       const map = await extractCurrentState(transcript);
       setCurrentStateMap(map);
       setBriefHasNewData(true);
+      if (sessionIdRef.current) await updateSessionStateMap(sessionIdRef.current, map);
     } catch {}
     setExtractingState(false);
   }, [extractingState]);
@@ -88,6 +98,8 @@ export default function CopilotPage() {
       text,
       timestamp: Date.now(),
     };
+
+    if (sessionIdRef.current) saveSegment(sessionIdRef.current, segment);
 
     setSegments(prev => {
       const next = [...prev, segment];
@@ -114,27 +126,40 @@ export default function CopilotPage() {
       try {
         const newSuggestions = await getCopilotSuggestions(fullTranscriptRef.current, context);
         if (newSuggestions.length > 0) {
-          setSuggestions(prev => [...newSuggestions, ...prev].slice(0, MAX_SUGGESTIONS));
+          setSuggestions(prev => {
+            const merged = [...newSuggestions, ...prev].slice(0, MAX_SUGGESTIONS);
+            if (sessionIdRef.current) saveSuggestions(sessionIdRef.current, newSuggestions);
+            return merged;
+          });
         }
       } catch {}
     }, 4000);
   }, [context, triggerSummary, triggerStateExtraction]);
 
-  const toggleRecording = useCallback(() => {
+  const toggleRecording = useCallback(async () => {
     if (recording) {
       stopFnRef.current?.();
       stopFnRef.current = null;
       setRecording(false);
+      if (sessionIdRef.current) {
+        await endSession(sessionIdRef.current, summaryRef.current, currentStateMapRef.current);
+      }
     } else {
+      const sid = await createSession();
+      sessionIdRef.current = sid;
       const stop = startTranscription(handleSegment);
       stopFnRef.current = stop;
       setRecording(true);
     }
   }, [recording, handleSegment]);
 
-  const handleReset = () => {
+  const handleReset = async () => {
     stopFnRef.current?.();
     stopFnRef.current = null;
+    if (sessionIdRef.current) {
+      await endSession(sessionIdRef.current, summaryRef.current, currentStateMapRef.current);
+      sessionIdRef.current = null;
+    }
     setRecording(false);
     setSegments([]);
     setSuggestions([]);
@@ -181,6 +206,12 @@ export default function CopilotPage() {
           <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#38d4a0', flex: 1 }}>
             Meeting Copilot
           </span>
+          <a
+            href="/copilot/history"
+            style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.55rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#3a4a60', textDecoration: 'none', flexShrink: 0 }}
+          >
+            History
+          </a>
           <MicButton recording={recording} supported={supported} onToggle={toggleRecording} />
         </div>
 
