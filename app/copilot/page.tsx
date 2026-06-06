@@ -22,6 +22,26 @@ const STATE_EVERY_N = 15;
 
 type RightTab = 'suggestions' | 'brief' | 'summary';
 type LeftTab = 'transcript' | 'context';
+type Temperature = 'Cold' | 'Warm' | 'Hot';
+
+function computeTemperature(suggestions: CopilotSuggestion[]): Temperature {
+  let score = 0;
+  for (const s of suggestions) {
+    if (s.type === 'closing') score += 3;
+    else if (s.type === 'solution' && s.confidence === 'high') score += 1;
+    else if (s.type === 'question' && s.confidence === 'high') score += 0.5;
+    else if (s.type === 'warning') score -= 2;
+  }
+  if (score >= 5) return 'Hot';
+  if (score >= 2) return 'Warm';
+  return 'Cold';
+}
+
+const TEMP_STYLE: Record<Temperature, { color: string; bg: string; dot: string }> = {
+  Cold: { color: '#4a9eff', bg: '#020810', dot: '#4a9eff' },
+  Warm: { color: '#e8a020', bg: '#180e02', dot: '#e8a020' },
+  Hot:  { color: '#38d4a0', bg: '#021008', dot: '#38d4a0' },
+};
 
 export default function CopilotPage() {
   const router = useRouter();
@@ -206,6 +226,16 @@ export default function CopilotPage() {
           <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#38d4a0', flex: 1 }}>
             Meeting Copilot
           </span>
+          {/* Temperature indicator — only shows once recording starts and suggestions exist */}
+          {recording && suggestions.length > 0 && (() => {
+            const temp = computeTemperature(suggestions);
+            const ts = TEMP_STYLE[temp];
+            return (
+              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.55rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: ts.color, background: ts.bg, border: `1px solid ${ts.dot}`, padding: '0.15rem 0.5rem', flexShrink: 0 }}>
+                ● {temp}
+              </span>
+            );
+          })()}
           <a
             href="/copilot/history"
             style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.55rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#3a4a60', textDecoration: 'none', flexShrink: 0 }}
