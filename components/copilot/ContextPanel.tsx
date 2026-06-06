@@ -101,6 +101,12 @@ SAY: "Happy to — I just want to make sure I capture the full picture first so 
 
 == CLOSING PROMPTS ==
 (Use when they show interest or ask forward-looking questions)
+IMPORTANT: After saying any close, STOP TALKING. Silence is the move. First to speak often concedes.
+
+HOW-QUESTIONS CLOSE (highest urgency — client has already decided emotionally):
+When they ask "how long does setup take," "what would that look like," "how does that work" —
+"Based on what you've told me, I'd suggest starting with [specific solution]. The simplest next step is a 30-minute scoping call — I'll map out exactly what we'd build and send you a proposal the same day. Does Thursday or Friday work?"
+→ Say it. Then stop. Do not explain further. Wait.
 
 STANDARD CLOSE:
 "It sounds like [X] is the main thing hurting you right now. Based on what you've told me, I'd suggest we start with [specific solution]. The simplest next step is a 30-minute scoping call — we'd map out exactly what we build and I'll send you a proposal the same day. Does that work?"
@@ -113,6 +119,45 @@ URGENCY CLOSE (when they've described active pain):
 
 TWO-BUYER CLOSE (when ops manager is bought in but owner is quiet):
 "[Ops manager name], it sounds like you've felt this pain most directly. [Owner name], what questions do you have? I want to make sure you both feel good about this before we talk next steps."
+
+PRICE-QUOTED SILENCE RULE:
+After stating a price, stop talking. Do not justify, explain, or soften. Let them respond first.
+If they push back: "I hear you — what were you expecting?" [Listen.] Then use the ROI frame.
+
+
+== BUYER PSYCHOLOGY — WHO IS IN THE ROOM ==
+
+OWNER (makes final decision):
+- Buying: CERTAINTY — "will this actually work, or will I pay and be in the same place?"
+- Signals: asks about risk, ROI, "what happens if it doesn't work," makes final-sounding statements
+- Approach: reduce risk, offer 30-day review, reference patterns from similar businesses, start small option
+
+OPS MANAGER (feels the pain daily):
+- Buying: RELIEF — "will this get this nightmare off my plate without me having to figure it all out?"
+- Signals: describes day-to-day friction, says "I'm the one who has to deal with this," visibly relieved when you describe a solution
+- Approach: emphasize "we handle everything — setup, testing, training, your team needs about 2 hours total"
+- Give them internal language: "I can put together a one-page summary of what we'd build and what it costs so it's easy to share."
+
+SILENT DECISION-MAKER:
+- The person who talks most is rarely the buyer. Watch who others look at when you say something important.
+- Direct your close at the quiet one.
+
+OBJECTIONS ARE RARELY ABOUT THE STATED OBJECTION:
+- "Too expensive" = "I don't see the value clearly enough yet" → rebuild the ROI, don't defend the price
+- "We need to think about it" = "I'm not convinced it will work" → ask what specifically they need to see
+- "Not the right time" = "The pain isn't urgent enough yet" → make the cost of waiting concrete
+
+
+== PRICING STRATEGY ==
+
+ALWAYS ANCHOR WITH GROWTH TIER FIRST:
+Present the full Growth package ($4k–8k + $600/mo) as the recommendation. Then offer Starter as a step-down:
+"If budget is a tighter consideration right now, we could start with just [single highest-ROI item] at the Starter tier — that's $1,500–3,000 setup plus $300/month — and build from there once you've seen it work."
+
+ROI FRAME (use with every price):
+"At $300/month — if this recovers even [X] hours a week for [person doing it], at [their rate], this pays for itself in [X] weeks. And that's before you factor in [leads converted / errors avoided / stress removed]."
+
+AFTER QUOTING PRICE: Stop talking. Wait. Do not soften, explain, or justify. Let them respond.
 
 
 == ASSESSMENT PATTERNS — LISTEN FOR THESE ==
@@ -131,14 +176,11 @@ Mailchimp, Constant Contact → Email upgrade
 Google Sheets/Excel → Dashboard upgrade
 Phone / manual calls → SMS/scheduling automation
 
-BUYING SIGNALS → Trigger closing prompt:
-- "that would really help"
-- "we've needed something like this"
-- "how long would that take"
-- "what would that actually look like"
-- "how do we get started"
-- "that makes sense"
-- "yeah exactly" (with energy/enthusiasm)
+BUYING SIGNALS → Trigger closing prompt immediately:
+HOW-QUESTIONS (highest signal — client is already in): "how long does setup take," "how does that work," "what would that look like"
+FORWARD-LOOKING: "that would really help," "we've needed something like this," "when could you start"
+AGREEMENT WITH ENERGY: "yeah exactly," "that makes sense," "absolutely" (enthusiastic)
+NEXT-STEP QUESTIONS: "what happens after this," "how do we get started," "what does working together look like"
 
 
 == DISCOVERY QUESTIONS ==
