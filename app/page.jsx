@@ -10,223 +10,266 @@ const CSS = `
 ${GFONTS}
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#08090f;--surface:#0e1018;--border:#1c2030;--border2:#242838;
-  --text:#ddd8cc;--muted:#58647a;--dim:#2a3040;
-  --gold:#e8a020;--gold2:#f5c040;--blue:#4a9eff;--teal:#38d4a0;--rose:#e85858;
+  --bg:#f5f4f0;--surface:#ffffff;--border:#e2ddd6;--border2:#c8c0b4;
+  --text:#111827;--muted:#6b7280;--dim:#9ca3af;
+  --gold:#b8750e;--gold2:#c8861a;--gold-bg:#fef9f0;--gold-border:#f0d090;
+  --blue:#2563eb;--blue-bg:#eff6ff;--blue-border:#bfdbfe;
+  --teal:#0d9488;--teal-bg:#f0fdfa;--teal-border:#99f6e4;
+  --rose:#dc2626;--rose-bg:#fef2f2;--rose-border:#fecaca;
+  --indigo:#7c3aed;--indigo-bg:#f5f3ff;--indigo-border:#ddd6fe;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
 }
 body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-size:15px;line-height:1.6}
-.app{min-height:100vh;position:relative;overflow:hidden}
-.noise{position:fixed;inset:0;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
-.glow{position:fixed;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(232,160,32,.06) 0%,transparent 65%);top:-200px;right:-200px;pointer-events:none;z-index:0}
-.wrap{max-width:700px;margin:0 auto;padding:2rem 1.5rem 6rem;position:relative;z-index:1}
+.app{min-height:100vh}
+.wrap{max-width:720px;margin:0 auto;padding:0 1.5rem 6rem}
 
 /* NAV */
-.nav{padding:2rem 0 2.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);margin-bottom:3rem}
-.brand{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);opacity:.7}
-.nav-right{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em}
+.nav{padding:1.25rem 0;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);margin-bottom:2.5rem}
+.brand{display:flex;align-items:center;gap:.75rem}
+.brand-logo{width:32px;height:32px;background:var(--text);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:.6rem;color:white;letter-spacing:.05em;flex-shrink:0}
+.brand-text{font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:600;color:var(--text)}
+.brand-ver{font-family:'DM Mono',monospace;font-size:.55rem;color:var(--dim);letter-spacing:.06em;margin-top:.1rem}
+.nav-right{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;background:var(--surface);border:1px solid var(--border);padding:.25rem .7rem;border-radius:20px}
 
 /* PROGRESS */
-.prog-wrap{margin-bottom:3rem}
-.prog-track{height:1px;background:var(--border);position:relative}
-.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .6s ease;position:absolute;top:0;left:0}
-.prog-dots{display:flex;justify-content:space-between;margin-top:.5rem}
-.prog-dot{font-family:'DM Mono',monospace;font-size:.55rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
-.prog-dot.active{color:var(--gold)}
+.prog-wrap{margin-bottom:2.5rem}
+.prog-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
+.prog-label{font-size:.78rem;font-weight:500;color:var(--text)}
+.prog-pct{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--gold2);font-weight:500}
+.prog-track{height:4px;background:var(--border);border-radius:2px;position:relative;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .6s ease;border-radius:2px}
+.prog-steps{display:flex;justify-content:space-between;margin-top:.6rem}
+.prog-dot{font-family:'DM Mono',monospace;font-size:.55rem;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+.prog-dot.active{color:var(--gold2);font-weight:500}
 
 /* INTRO */
-.intro-kicker{font-family:'DM Mono',monospace;font-size:.63rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:1.25rem}
-.intro-h{font-family:'Cormorant Garamond',serif;font-size:clamp(2.4rem,6vw,4rem);line-height:1.08;color:#f0ead8;margin-bottom:1.25rem}
-.intro-h em{font-style:italic;color:var(--gold)}
-.intro-p{font-size:.95rem;color:var(--muted);line-height:1.8;max-width:520px;margin-bottom:2.5rem}
-.track-pills{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:3rem}
-.tp{background:var(--surface);border:1px solid var(--border);padding:1.25rem;border-top:2px solid}
-.tp:nth-child(1){border-top-color:var(--gold)}
+.intro-kicker{display:inline-flex;align-items:center;gap:.5rem;background:var(--gold-bg);border:1px solid var(--gold-border);color:var(--gold2);font-family:'DM Mono',monospace;font-size:.63rem;letter-spacing:.12em;text-transform:uppercase;padding:.3rem .8rem;border-radius:20px;margin-bottom:1.5rem}
+.intro-h{font-family:'Cormorant Garamond',serif;font-size:clamp(2.4rem,6vw,3.8rem);line-height:1.06;color:var(--text);margin-bottom:1.25rem}
+.intro-h em{font-style:italic;color:var(--gold2)}
+.intro-p{font-size:1rem;color:var(--muted);line-height:1.8;max-width:520px;margin-bottom:2.5rem}
+.track-pills{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:2.5rem}
+.tp{background:var(--surface);border:1px solid var(--border);padding:1.25rem;border-radius:8px;border-top:3px solid;box-shadow:var(--shadow)}
+.tp:nth-child(1){border-top-color:var(--gold2)}
 .tp:nth-child(2){border-top-color:var(--blue)}
 .tp:nth-child(3){border-top-color:var(--teal)}
-.tp-icon{font-size:1.3rem;margin-bottom:.4rem}
-.tp-name{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#90a0b0;margin-bottom:.2rem}
-.tp-q{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--dim)}
+.tp-icon{font-size:1.4rem;margin-bottom:.5rem}
+.tp-name{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text);margin-bottom:.2rem}
+.tp-q{font-size:.75rem;color:var(--dim)}
 
-/* BIZ INFO */
-.fgroup{margin-bottom:1.5rem}
-.flabel{display:block;font-family:'DM Mono',monospace;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.5rem}
-.finput,.fselect{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Outfit',sans-serif;font-size:.92rem;padding:.8rem 1rem;outline:none;transition:border-color .2s;-webkit-appearance:none}
-.finput:focus,.fselect:focus{border-color:var(--gold)}
-.fselect option{background:var(--surface)}
-.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+/* FORMS */
+.fgroup{margin-bottom:1.25rem}
+.flabel{display:block;font-size:.75rem;font-weight:600;color:var(--text);margin-bottom:.4rem;letter-spacing:.01em}
+.finput,.fselect{width:100%;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:'Outfit',sans-serif;font-size:.92rem;padding:.75rem 1rem;outline:none;transition:border-color .15s;border-radius:6px;-webkit-appearance:none}
+.finput:focus,.fselect:focus{border-color:var(--gold2);box-shadow:0 0 0 3px rgba(200,134,26,.1)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 
-/* SECTION */
-.sec-kicker{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;margin-bottom:.4rem}
-.k-gold{color:var(--gold)}.k-blue{color:var(--blue)}.k-teal{color:var(--teal)}.k-rose{color:var(--rose)}.k-ind{color:#a060f0}
-.sec-title{font-family:'Cormorant Garamond',serif;font-size:1.75rem;color:#f0ead8;margin-bottom:.4rem;line-height:1.15}
-.sec-desc{font-size:.85rem;color:var(--muted);margin-bottom:2rem;line-height:1.65}
+/* SECTION HEADERS */
+.sec-kicker{display:inline-flex;align-items:center;gap:.4rem;font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:.5rem;padding:.25rem .65rem;border-radius:12px}
+.k-gold{background:var(--gold-bg);color:var(--gold2);border:1px solid var(--gold-border)}
+.k-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.k-teal{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-border)}
+.k-rose{background:var(--rose-bg);color:var(--rose);border:1px solid var(--rose-border)}
+.k-ind{background:var(--indigo-bg);color:var(--indigo);border:1px solid var(--indigo-border)}
+.sec-title{font-family:'Cormorant Garamond',serif;font-size:1.9rem;color:var(--text);margin-bottom:.35rem;line-height:1.12}
+.sec-desc{font-size:.88rem;color:var(--muted);margin-bottom:1.75rem;line-height:1.7}
 
 /* QUESTIONS */
-.qblock{margin-bottom:2.25rem}
-.qnum{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem}
-.qtext{font-size:.95rem;font-weight:500;color:#b8ccdc;margin-bottom:.9rem;line-height:1.5}
-.opts{display:flex;flex-direction:column;gap:.4rem}
-.opt{display:flex;align-items:flex-start;gap:.875rem;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:'Outfit',sans-serif;font-size:.83rem;padding:.8rem 1.1rem;cursor:pointer;text-align:left;transition:all .15s;line-height:1.45}
-.opt:hover{border-color:var(--border2);color:#b0c0d0;background:#101420}
-.opt.sel-gold{border-color:var(--gold);color:#f0ead8;background:#120e02}
-.opt.sel-blue{border-color:var(--blue);color:#f0ead8;background:#02080e}
-.opt.sel-teal{border-color:var(--teal);color:#f0ead8;background:#021208}
-.opt.sel-ind{border-color:#a060f0;color:#f0ead8;background:#08020e}
-.opt-radio{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--dim);flex-shrink:0;margin-top:.3rem;transition:all .15s}
-.opt.sel-gold .opt-radio{border-color:var(--gold);background:var(--gold)}
+.qblock{margin-bottom:2rem;padding:1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow)}
+.qnum{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem}
+.qtext{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:1rem;line-height:1.45}
+.opts{display:flex;flex-direction:column;gap:.5rem}
+.opt{display:flex;align-items:flex-start;gap:.875rem;background:var(--bg);border:1.5px solid var(--border);color:var(--muted);font-family:'Outfit',sans-serif;font-size:.88rem;padding:.875rem 1rem;cursor:pointer;text-align:left;transition:all .15s;line-height:1.5;border-radius:6px;width:100%}
+.opt:hover{border-color:var(--border2);color:var(--text);background:var(--surface)}
+.opt.sel-gold{border-color:var(--gold2);color:var(--text);background:var(--gold-bg)}
+.opt.sel-blue{border-color:var(--blue);color:var(--text);background:var(--blue-bg)}
+.opt.sel-teal{border-color:var(--teal);color:var(--text);background:var(--teal-bg)}
+.opt.sel-ind{border-color:var(--indigo);color:var(--text);background:var(--indigo-bg)}
+.opt-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--dim);flex-shrink:0;margin-top:.1rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.opt.sel-gold .opt-radio{border-color:var(--gold2);background:var(--gold2)}
 .opt.sel-blue .opt-radio{border-color:var(--blue);background:var(--blue)}
 .opt.sel-teal .opt-radio{border-color:var(--teal);background:var(--teal)}
-.opt.sel-ind .opt-radio{border-color:#a060f0;background:#a060f0}
+.opt.sel-ind .opt-radio{border-color:var(--indigo);background:var(--indigo)}
+.opt-radio-dot{width:7px;height:7px;border-radius:50%;background:white;opacity:0;transition:opacity .15s}
+.opt.sel-gold .opt-radio-dot,.opt.sel-blue .opt-radio-dot,.opt.sel-teal .opt-radio-dot,.opt.sel-ind .opt-radio-dot{opacity:1}
 
 /* NAV ROW */
-.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)}
-.btn-back{display:inline-flex;align-items:center;gap:.4rem;background:transparent;color:var(--muted);font-family:'Outfit',sans-serif;font-size:.82rem;padding:.65rem .9rem;border:1px solid var(--border);cursor:pointer;transition:all .2s}
-.btn-back:hover{color:var(--text);border-color:var(--border2)}
-.btn-next{display:inline-flex;align-items:center;gap:.5rem;background:var(--gold);color:#08090f;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:600;padding:.85rem 1.75rem;border:none;cursor:pointer;transition:all .2s;letter-spacing:.02em}
-.btn-next:hover{background:var(--gold2);transform:translateY(-1px)}
-.btn-next:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:1.75rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+.btn-back{display:inline-flex;align-items:center;gap:.4rem;background:transparent;color:var(--muted);font-family:'Outfit',sans-serif;font-size:.85rem;padding:.65rem 1rem;border:1.5px solid var(--border);cursor:pointer;transition:all .15s;border-radius:6px}
+.btn-back:hover{color:var(--text);border-color:var(--border2);background:var(--surface)}
+.btn-next{display:inline-flex;align-items:center;gap:.5rem;background:var(--text);color:white;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;padding:.85rem 1.75rem;border:none;cursor:pointer;transition:all .15s;border-radius:6px;letter-spacing:.01em}
+.btn-next:hover{background:#374151;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.btn-next:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
 
 /* INDUSTRY BADGE */
-.ind-badge{display:inline-flex;align-items:center;gap:.5rem;background:#0e0818;border:1px solid #2a1a48;padding:.4rem 1rem;margin-bottom:1.5rem}
-.ind-badge-dot{width:6px;height:6px;border-radius:50%;background:#a060f0}
-.ind-badge-txt{font-family:'DM Mono',monospace;font-size:.62rem;color:#8050c0;text-transform:uppercase;letter-spacing:.1em}
+.ind-badge{display:inline-flex;align-items:center;gap:.5rem;background:var(--indigo-bg);border:1px solid var(--indigo-border);padding:.35rem .9rem;margin-bottom:1.25rem;border-radius:20px}
+.ind-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--indigo);flex-shrink:0}
+.ind-badge-txt{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--indigo);text-transform:uppercase;letter-spacing:.1em}
 
-/* EMAIL CAPTURE (inline on results) */
-.email-capture{background:linear-gradient(135deg,#0a0c18,#0e0a04);border:1px solid #2a2010;padding:2rem;margin-bottom:2.5rem}
-.email-capture-title{font-family:'Cormorant Garamond',serif;font-size:1.35rem;color:#f0ead8;margin-bottom:.35rem}
-.email-capture-desc{font-size:.82rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.65}
+/* EMAIL CAPTURE */
+.email-capture{background:var(--surface);border:1px solid var(--border);padding:1.75rem;margin-bottom:2rem;border-radius:8px;box-shadow:var(--shadow)}
+.email-capture-title{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:.3rem}
+.email-capture-desc{font-size:.83rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.65}
 .email-row{display:flex;gap:.75rem;align-items:flex-start}
 .email-row .finput{flex:1}
-.btn-email{display:inline-flex;align-items:center;gap:.4rem;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:500;padding:.82rem 1.4rem;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0}
-.btn-email:hover{background:#140e02}
+.btn-email{display:inline-flex;align-items:center;gap:.4rem;background:var(--text);color:white;font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:500;padding:.76rem 1.4rem;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;border:none;border-radius:6px}
+.btn-email:hover{background:#374151}
 .btn-email:disabled{opacity:.4;cursor:not-allowed}
-.email-sent{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;padding:.5rem 0}
-.err{background:#1a0808;border:1px solid #4a1818;color:#f08080;font-size:.78rem;padding:.65rem .9rem;margin-top:.75rem}
+.email-sent{display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:var(--teal);font-weight:500;padding:.5rem 0}
+.err{background:var(--rose-bg);border:1px solid var(--rose-border);color:var(--rose);font-size:.8rem;padding:.65rem .9rem;margin-top:.75rem;border-radius:5px}
 
 /* LOADING */
 .loading{text-align:center;padding:5rem 0}
-.spin{width:44px;height:44px;border:1.5px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 2rem}
+.spin{width:40px;height:40px;border:2px solid var(--border);border-top-color:var(--gold2);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 2rem}
 @keyframes spin{to{transform:rotate(360deg)}}
-.load-title{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:#f0ead8;margin-bottom:.5rem}
-.load-sub{font-size:.83rem;color:var(--muted);margin-bottom:1.5rem}
-.load-steps{list-style:none}
-.load-steps li{font-family:'DM Mono',monospace;font-size:.63rem;color:var(--dim);letter-spacing:.08em;padding:.25rem 0;transition:color .3s}
-.load-steps li.ls-active{color:var(--gold)}
-.load-steps li.ls-done{color:var(--muted)}
+.load-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--text);margin-bottom:.4rem}
+.load-sub{font-size:.85rem;color:var(--muted);margin-bottom:1.75rem}
+.load-steps{list-style:none;display:inline-block;text-align:left}
+.load-steps li{font-size:.82rem;color:var(--dim);padding:.3rem 0;transition:color .3s;display:flex;align-items:center;gap:.5rem}
+.load-steps li.ls-active{color:var(--text);font-weight:500}
+.load-steps li.ls-done{color:var(--teal)}
 
 /* ─── RESULTS ─── */
-.r-header{margin-bottom:2.5rem}
-.r-kicker{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:.4rem}
-.r-title{font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,4vw,2.6rem);color:#f0ead8;line-height:1.1;margin-bottom:.75rem}
-.r-chips{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:2rem}
-.r-chip{font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);background:var(--surface);border:1px solid var(--border);padding:.22rem .65rem}
+/* Header */
+.r-meta{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:1.5rem}
+.r-meta-label{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.r-chips{display:flex;gap:.4rem;flex-wrap:wrap}
+.r-chip{font-size:.72rem;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:.2rem .6rem;border-radius:20px}
 
-/* SCORE */
-.score-block{background:var(--surface);border:1px solid var(--border);padding:2rem 2.5rem;margin-bottom:1.5rem;display:grid;grid-template-columns:120px 1fr;gap:2.5rem;align-items:center}
-.big-n{font-family:'Cormorant Garamond',serif;font-size:5.5rem;color:var(--gold);line-height:1}
-.big-sub{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-top:.15rem}
-.mat{display:inline-block;font-family:'DM Mono',monospace;font-size:.62rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:.28rem .85rem;margin-top:.6rem}
-.mat-b{background:#140e02;color:var(--gold);border:1px solid #3a2808}
-.mat-d{background:#020810;color:var(--blue);border:1px solid #0a1830}
-.mat-g{background:#021008;color:var(--teal);border:1px solid #0a2818}
-.mat-a{background:#081002;color:#90d040;border:1px solid #182808}
-.r-summary{font-size:.88rem;color:#6a8098;line-height:1.8}
-.r-summary strong{color:#a8c0d0}
+/* HERO CARD */
+.r-hero{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:2rem 2.25rem;margin-bottom:1.25rem;box-shadow:var(--shadow-md)}
+.r-hero-top{display:grid;grid-template-columns:auto 1fr;gap:2rem;align-items:center;margin-bottom:1.5rem}
+.r-hero-score-wrap{text-align:center}
+.r-hero-score{font-family:'Cormorant Garamond',serif;font-size:5rem;color:var(--gold2);line-height:1}
+.r-hero-denom{font-size:.78rem;color:var(--dim);font-family:'DM Mono',monospace;margin-bottom:.5rem}
+.r-hero-summary{font-size:.95rem;color:var(--text);line-height:1.8}
+.r-hero-summary strong{color:var(--gold2);font-weight:600}
+.mat{display:inline-block;font-family:'DM Mono',monospace;font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .85rem;border-radius:20px;margin-top:.4rem}
+.mat-b{background:var(--gold-bg);color:var(--gold2);border:1px solid var(--gold-border)}
+.mat-d{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.mat-g{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-border)}
+.mat-a{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
 
-.track-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.875rem;margin-bottom:2.5rem}
-.tc{background:var(--surface);border:1px solid var(--border);border-top:2px solid;padding:1.25rem}
-.tc1{border-top-color:var(--gold)}.tc2{border-top-color:var(--blue)}.tc3{border-top-color:var(--teal)}
+/* TRACK SCORES */
+.track-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.5rem}
+.tc{background:var(--surface);border:1px solid var(--border);border-top:3px solid;padding:1.25rem;border-radius:8px;box-shadow:var(--shadow)}
+.tc1{border-top-color:var(--gold2)}.tc2{border-top-color:var(--blue)}.tc3{border-top-color:var(--teal)}
 .tc-name{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.6rem}
-.tc-num{font-family:'Cormorant Garamond',serif;font-size:2rem;line-height:1;margin-bottom:.25rem}
-.tc1 .tc-num{color:var(--gold)}.tc2 .tc-num{color:var(--blue)}.tc3 .tc-num{color:var(--teal)}
-.tc-mat{font-family:'DM Mono',monospace;font-size:.56rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem}
-.tc1 .tc-mat{color:#a07010}.tc2 .tc-mat{color:#2870c0}.tc3 .tc-mat{color:#20a070}
-.bar{height:2px;background:var(--border);overflow:hidden}
-.bar-f{height:100%;transition:width 1.2s ease}
-.tc1 .bar-f{background:var(--gold)}.tc2 .bar-f{background:var(--blue)}.tc3 .bar-f{background:var(--teal)}
+.tc-num{font-family:'Cormorant Garamond',serif;font-size:2.2rem;line-height:1;margin-bottom:.2rem}
+.tc1 .tc-num{color:var(--gold2)}.tc2 .tc-num{color:var(--blue)}.tc3 .tc-num{color:var(--teal)}
+.tc-mat{font-size:.65rem;font-weight:500;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+.tc1 .tc-mat{color:var(--gold2)}.tc2 .tc-mat{color:var(--blue)}.tc3 .tc-mat{color:var(--teal)}
+.bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.bar-f{height:100%;transition:width 1.2s ease;border-radius:2px}
+.tc1 .bar-f{background:var(--gold2)}.tc2 .bar-f{background:var(--blue)}.tc3 .bar-f{background:var(--teal)}
 
-/* RESULT SECTIONS */
-.rsec{margin-bottom:2.5rem}
-.rsec-hdr{display:flex;align-items:baseline;justify-content:space-between;padding-bottom:.6rem;border-bottom:1px solid var(--border);margin-bottom:1.25rem}
-.rsec-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:#e0d8c8}
-.rsec-sub{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+/* EXEC TOP ACTIONS */
+.exec-actions{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--gold2);border-radius:8px;padding:1.5rem 1.75rem;margin-bottom:1.25rem;box-shadow:var(--shadow)}
+.exec-actions-label{font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.14em;color:var(--gold2);margin-bottom:.75rem}
+.exec-actions-title{font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--text);margin-bottom:1rem}
+.exec-action{display:flex;align-items:flex-start;gap:.875rem;padding:.75rem 0;border-bottom:1px solid var(--border)}
+.exec-action:last-child{border-bottom:none;padding-bottom:0}
+.exec-action-num{width:24px;height:24px;border-radius:50%;background:var(--gold2);color:white;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.15rem}
+.exec-action-name{font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:.2rem}
+.exec-action-desc{font-size:.8rem;color:var(--muted);line-height:1.55}
+.exec-action-pills{display:flex;gap:.4rem;margin-top:.4rem}
+.pill{font-family:'DM Mono',monospace;font-size:.58rem;padding:.18rem .55rem;border-radius:10px;text-transform:uppercase;letter-spacing:.07em}
+.pill-effort-low{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-border)}
+.pill-effort-med{background:var(--gold-bg);color:var(--gold2);border:1px solid var(--gold-border)}
+.pill-effort-high{background:var(--rose-bg);color:var(--rose);border:1px solid var(--rose-border)}
+.pill-impact{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
+
+/* COLLAPSIBLE SECTIONS */
+.rsec{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:.75rem;overflow:hidden;box-shadow:var(--shadow)}
+.rsec-hdr{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.4rem;cursor:pointer;user-select:none;transition:background .15s}
+.rsec-hdr:hover{background:#fafaf8}
+.rsec-hdr-left{display:flex;align-items:center;gap:.75rem}
+.rsec-icon{font-size:1.1rem}
+.rsec-title{font-size:.95rem;font-weight:600;color:var(--text)}
+.rsec-count{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--dim);background:var(--bg);border:1px solid var(--border);padding:.15rem .5rem;border-radius:10px}
+.rsec-chev{font-size:.7rem;color:var(--dim);transition:transform .2s}
+.rsec-chev.open{transform:rotate(180deg)}
+.rsec-body{padding:0 1.4rem 1.4rem;border-top:1px solid var(--border)}
 
 /* BLIND SPOTS */
-.blind-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.875rem}
-.blind-card{background:#0c0814;border:1px solid #201030;border-left:2px solid #8040d0;padding:1.25rem}
-.blind-icon{font-size:1.25rem;margin-bottom:.4rem}
-.blind-name{font-size:.8rem;font-weight:600;color:#c0a0e8;margin-bottom:.3rem}
-.blind-desc{font-size:.78rem;color:#5a4868;line-height:1.55}
+.blind-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem;padding-top:1.1rem}
+.blind-card{background:var(--indigo-bg);border:1px solid var(--indigo-border);border-left:3px solid var(--indigo);padding:1.25rem;border-radius:6px}
+.blind-icon{font-size:1.3rem;margin-bottom:.5rem}
+.blind-name{font-size:.85rem;font-weight:600;color:var(--indigo);margin-bottom:.35rem}
+.blind-desc{font-size:.8rem;color:#4c1d95;line-height:1.6;opacity:.8}
 
 /* QUICK WINS */
-.qw{display:flex;flex-direction:column;gap:.75rem}
-.qw-card{background:var(--surface);border:1px solid var(--border);padding:1.4rem;display:grid;grid-template-columns:1fr auto;gap:1.25rem;align-items:start}
-.qw-badge{font-family:'DM Mono',monospace;font-size:.56rem;text-transform:uppercase;letter-spacing:.1em;padding:.18rem .55rem;margin-bottom:.4rem;display:inline-block}
-.bg-green{background:#021008;color:var(--teal);border:1px solid #0a2818}
-.bg-gold{background:#140e02;color:var(--gold);border:1px solid #3a2808}
-.bg-blue{background:#020810;color:var(--blue);border:1px solid #0a1830}
-.bg-rose{background:#0e0202;color:var(--rose);border:1px solid #2a0808}
-.qw-title{font-size:.87rem;font-weight:600;color:#b8ccdc;margin-bottom:.3rem}
-.qw-desc{font-size:.8rem;color:var(--muted);line-height:1.6}
-.qw-effort{display:flex;flex-direction:column;gap:.35rem;text-align:right;flex-shrink:0}
-.ef-label{font-family:'DM Mono',monospace;font-size:.52rem;color:var(--dim);text-transform:uppercase;letter-spacing:.07em}
-.ef-val{font-family:'DM Mono',monospace;font-size:.72rem}
-.ef-low{color:var(--teal)}.ef-med{color:var(--gold)}.ef-high{color:var(--rose)}
+.qw{display:flex;flex-direction:column;gap:.6rem;padding-top:1.1rem}
+.qw-card{background:var(--bg);border:1px solid var(--border);padding:1.25rem 1.4rem;display:grid;grid-template-columns:1fr auto;gap:1.25rem;align-items:start;border-radius:6px}
+.qw-badge{font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;padding:.2rem .6rem;border-radius:10px;margin-bottom:.4rem;display:inline-block;font-weight:600}
+.bg-green{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-border)}
+.bg-gold{background:var(--gold-bg);color:var(--gold2);border:1px solid var(--gold-border)}
+.bg-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.bg-rose{background:var(--rose-bg);color:var(--rose);border:1px solid var(--rose-border)}
+.qw-title{font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:.3rem}
+.qw-desc{font-size:.82rem;color:var(--muted);line-height:1.6}
+.qw-effort{display:flex;flex-direction:column;gap:.5rem;text-align:right;flex-shrink:0;min-width:70px}
+.ef-label{font-family:'DM Mono',monospace;font-size:.55rem;color:var(--dim);text-transform:uppercase;letter-spacing:.07em}
+.ef-val{font-size:.78rem;font-weight:600}
+.ef-low{color:var(--teal)}.ef-med{color:var(--gold2)}.ef-high{color:var(--rose)}
 
 /* RECS */
-.rec{background:var(--surface);border:1px solid var(--border);border-left:2px solid;padding:1.3rem 1.4rem;margin-bottom:.75rem}
-.r-gold{border-left-color:var(--gold)}.r-blue{border-left-color:var(--blue)}.r-teal{border-left-color:var(--teal)}
-.rec-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:.875rem;margin-bottom:.35rem}
-.rec-title{font-size:.87rem;font-weight:600;color:#b8ccdc;flex:1}
-.rec-tag{font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;padding:.16rem .5rem;flex-shrink:0}
-.r-gold .rec-tag{background:#140e02;color:#a07010}
-.r-blue .rec-tag{background:#020810;color:#2870c0}
-.r-teal .rec-tag{background:#021008;color:#20a070}
-.rec-body{font-size:.81rem;color:var(--muted);line-height:1.65}
-.rec-body strong{color:#7a9ab0}
+.recs-list{display:flex;flex-direction:column;gap:.6rem;padding-top:1.1rem}
+.rec{background:var(--bg);border:1px solid var(--border);border-left:3px solid;padding:1.2rem 1.4rem;border-radius:6px}
+.r-gold{border-left-color:var(--gold2)}.r-blue{border-left-color:var(--blue)}.r-teal{border-left-color:var(--teal)}
+.rec-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;margin-bottom:.35rem}
+.rec-title{font-size:.9rem;font-weight:600;color:var(--text);flex:1}
+.rec-tag{font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.18rem .55rem;border-radius:10px;flex-shrink:0;font-weight:500}
+.r-gold .rec-tag{background:var(--gold-bg);color:var(--gold2);border:1px solid var(--gold-border)}
+.r-blue .rec-tag{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.r-teal .rec-tag{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-border)}
+.rec-body{font-size:.83rem;color:var(--muted);line-height:1.65}
+.rec-body strong{color:var(--text);font-weight:600}
 
 /* ROADMAP */
-.roadmap{border:1px solid var(--border);overflow:hidden}
-.rm-ph{border-bottom:1px solid var(--border)}
-.rm-ph:last-child{border-bottom:none}
-.rm-ph-hdr{background:var(--surface);padding:.7rem 1.1rem;display:flex;align-items:center;gap:.875rem;cursor:pointer;user-select:none}
+.roadmap{padding-top:1.1rem}
+.rm-ph{border:1px solid var(--border);border-radius:6px;margin-bottom:.5rem;overflow:hidden}
+.rm-ph-hdr{background:var(--bg);padding:.8rem 1.1rem;display:flex;align-items:center;gap:.75rem;cursor:pointer;user-select:none;transition:background .15s}
+.rm-ph-hdr:hover{background:var(--surface)}
 .rm-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.d1{background:var(--teal)}.d2{background:var(--gold)}.d3{background:var(--blue)}.d4{background:#a060f0}
-.rm-ph-name{font-family:'DM Mono',monospace;font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:#5a6878;flex:1}
-.rm-ph-time{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--dim)}
+.d1{background:var(--teal)}.d2{background:var(--gold2)}.d3{background:var(--blue)}.d4{background:var(--indigo)}
+.rm-ph-name{font-size:.82rem;font-weight:600;color:var(--text);flex:1}
+.rm-ph-time{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--dim);background:var(--surface);border:1px solid var(--border);padding:.15rem .55rem;border-radius:10px}
 .rm-chev{color:var(--dim);font-size:.65rem;transition:transform .2s}
 .rm-chev.open{transform:rotate(180deg)}
-.rm-cols-hdr{background:#0a0c14;padding:.45rem 1.1rem;display:grid;grid-template-columns:1fr 80px 80px 70px;gap:.875rem;border-top:1px solid var(--border)}
-.rm-col-h{font-family:'DM Mono',monospace;font-size:.54rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);text-align:center}
+.rm-cols-hdr{background:var(--bg);padding:.45rem 1.1rem;display:grid;grid-template-columns:1fr 80px 80px 70px;gap:.75rem;border-top:1px solid var(--border)}
+.rm-col-h{font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);text-align:center}
 .rm-col-h:first-child{text-align:left}
-.rm-row{padding:.85rem 1.1rem;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 80px 80px 70px;gap:.875rem;align-items:center}
-.rm-row:hover{background:#0c0f18}
-.rm-item-name{font-size:.82rem;color:#8a9eb8}
-.rm-item-sub{font-size:.72rem;color:var(--dim);margin-top:.15rem}
+.rm-row{padding:.85rem 1.1rem;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 80px 80px 70px;gap:.75rem;align-items:center}
+.rm-row:hover{background:#fafaf8}
+.rm-item-name{font-size:.85rem;font-weight:500;color:var(--text)}
+.rm-item-sub{font-size:.73rem;color:var(--muted);margin-top:.12rem}
 .rm-col{text-align:center}
-.rm-val{font-family:'DM Mono',monospace;font-size:.7rem}
-.effort-low{color:var(--teal)}.effort-med{color:var(--gold)}.effort-high{color:var(--rose)}
+.rm-val{font-size:.75rem;font-weight:600}
+.effort-low{color:var(--teal)}.effort-med{color:var(--gold2)}.effort-high{color:var(--rose)}
 
 /* CTA */
-.cta{background:linear-gradient(135deg,#0e0a04,#0a0e18);border:1px solid #302010;padding:2.5rem;text-align:center;margin-top:2.5rem}
-.cta-title{font-family:'Cormorant Garamond',serif;font-size:1.7rem;color:#f0ead8;margin-bottom:.5rem}
-.cta-desc{font-size:.85rem;color:var(--muted);margin-bottom:1.75rem;line-height:1.7;max-width:440px;margin-left:auto;margin-right:auto}
-.cta-btns{display:flex;gap:.875rem;justify-content:center;flex-wrap:wrap}
-.btn-p{display:inline-flex;align-items:center;gap:.4rem;background:var(--gold);color:#08090f;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:600;padding:.9rem 1.75rem;border:none;cursor:pointer;transition:all .2s}
-.btn-p:hover{background:var(--gold2);transform:translateY(-1px)}
-.btn-s{display:inline-flex;align-items:center;background:transparent;color:var(--muted);font-family:'Outfit',sans-serif;font-size:.82rem;padding:.9rem 1.4rem;border:1px solid var(--border);cursor:pointer;transition:all .2s}
-.btn-s:hover{color:var(--text);border-color:var(--border2)}
+.cta{background:var(--text);border-radius:10px;padding:2.5rem;text-align:center;margin-top:2rem}
+.cta-title{font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:white;margin-bottom:.5rem}
+.cta-desc{font-size:.88rem;color:rgba(255,255,255,.6);margin-bottom:1.75rem;line-height:1.7;max-width:440px;margin-left:auto;margin-right:auto}
+.cta-btns{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap}
+.btn-p{display:inline-flex;align-items:center;gap:.4rem;background:var(--gold2);color:white;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;padding:.9rem 1.75rem;border:none;cursor:pointer;transition:all .15s;border-radius:6px}
+.btn-p:hover{background:var(--gold);transform:translateY(-1px)}
+.btn-s{display:inline-flex;align-items:center;background:transparent;color:rgba(255,255,255,.6);font-family:'Outfit',sans-serif;font-size:.85rem;padding:.9rem 1.4rem;border:1.5px solid rgba(255,255,255,.2);cursor:pointer;transition:all .15s;border-radius:6px}
+.btn-s:hover{color:white;border-color:rgba(255,255,255,.4)}
 
-.r-footer{margin-top:3rem;padding-top:1.25rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;flex-wrap:wrap;gap:.875rem}
-.r-footer-txt{font-family:'DM Mono',monospace;font-size:.56rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+.r-footer{margin-top:2.5rem;padding-top:1.25rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;flex-wrap:wrap;gap:.75rem}
+.r-footer-txt{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
 
 @media(max-width:580px){
   .track-pills,.track-row,.fgrid,.blind-grid{grid-template-columns:1fr}
-  .score-block{grid-template-columns:1fr;gap:1.25rem}
+  .r-hero-top{grid-template-columns:1fr;gap:1rem;text-align:center}
+  .r-hero-score-wrap{display:flex;flex-direction:column;align-items:center}
   .qw-card{grid-template-columns:1fr}
-  .rm-cols-hdr,.rm-row{grid-template-columns:1fr 80px 80px}
+  .rm-cols-hdr,.rm-row{grid-template-columns:1fr 70px 70px}
   .rm-cols-hdr>:last-child,.rm-row>:last-child{display:none}
   .cta-btns{flex-direction:column}
+  .exec-action-pills{flex-wrap:wrap}
 }
 `;
 
@@ -472,6 +515,8 @@ export default function App() {
   const [loadStep, setLoadStep] = useState(0);
   const [err, setErr] = useState("");
   const [openPh, setOpenPh] = useState({0:true,1:false,2:false,3:false});
+  const [openSec, setOpenSec] = useState({blind:false,wins:false,recs:false,roadmap:false});
+  const togSec = k => setOpenSec(p=>({...p,[k]:!p[k]}));
   const [emailInput, setEmailInput] = useState("");
   const [emailSent, setEmailSent] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
@@ -646,26 +691,40 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
     <>
       <style>{CSS}</style>
       <div className="app">
-        <div className="noise"/><div className="glow"/>
         <div className="wrap">
 
           {/* NAV */}
           <div className="nav">
-            <div className="brand">Business Assessment <span style={{opacity:.4,fontSize:".55rem",letterSpacing:".06em"}}>v1.2</span></div>
+            <div className="brand">
+              <div className="brand-logo">BA</div>
+              <div>
+                <div className="brand-text">Business Assessment</div>
+                <div className="brand-ver">v1.3</div>
+              </div>
+            </div>
             {step!=="intro"&&step!=="results"&&step!=="loading"&&(
               <div className="nav-right">
                 {step==="bizinfo"?"Your Business":
-                 step==="track"?`${curTrack.name} · Track ${track+1}/3`:
+                 step==="track"?`${curTrack.name} · ${track+1}/3`:
                  step==="deep"?`${deepData.label}`:""}
               </div>
             )}
           </div>
 
           {/* PROGRESS */}
-          {step!=="intro"&&(
+          {step!=="intro"&&step!=="results"&&(
             <div className="prog-wrap">
+              <div className="prog-header">
+                <div className="prog-label">{
+                  step==="bizinfo"?"Your Business":
+                  step==="track"?`${curTrack.name} — Track ${track+1} of 3`:
+                  step==="deep"?"Industry Deep Dive":
+                  step==="loading"?"Generating Your Report":""}
+                </div>
+                <div className="prog-pct">{Math.round(prog())}%</div>
+              </div>
               <div className="prog-track"><div className="prog-fill" style={{width:`${prog()}%`}}/></div>
-              <div className="prog-dots">
+              <div className="prog-steps">
                 {STEPS.map((s,i)=>(
                   <div key={i} className={`prog-dot ${i<=stepIdx?"active":""}`}>{s}</div>
                 ))}
@@ -745,8 +804,8 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
                   <div className="opts">
                     {q.opts.map((o,oi)=>(
                       <button key={oi} className={`opt ${ans[curKey][qi]===oi?curTrack.sel:""}`} onClick={()=>setA(curKey,qi,oi)}>
-                        <span className="opt-radio"/>
-                        {o}
+                        <span className="opt-radio"><span className="opt-radio-dot"/></span>
+                        <span>{o}</span>
                       </button>
                     ))}
                   </div>
@@ -778,8 +837,8 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
                   <div className="opts">
                     {q.opts.map((o,oi)=>(
                       <button key={oi} className={`opt ${ans.deep[qi]===oi?"sel-ind":""}`} onClick={()=>setA("deep",qi,oi)}>
-                        <span className="opt-radio"/>
-                        {o}
+                        <span className="opt-radio"><span className="opt-radio-dot"/></span>
+                        <span>{o}</span>
                       </button>
                     ))}
                   </div>
@@ -819,32 +878,31 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
           )}
 
           {/* ── RESULTS ── */}
-          {step==="results"&&results&&(()=>{
-            const togPh=i=>setOpenPh(p=>({...p,[i]:!p[i]}));
-            return (
-              <div>
-                <div className="r-header">
-                  <div className="r-kicker">Operations Report · {new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>
-                  <div className="r-title">{biz.company||"Your Business"}</div>
-                  <div className="r-chips">
-                    <span className="r-chip">{biz.industry}</span>
-                    <span className="r-chip">{biz.size}</span>
-                    <span className="r-chip">{biz.role}</span>
-                  </div>
+          {step==="results"&&results&&(
+            <div>
+              {/* META ROW */}
+              <div className="r-meta">
+                <div className="r-meta-label">Operations Report · {new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>
+                <div className="r-chips">
+                  <span className="r-chip">{biz.industry}</span>
+                  <span className="r-chip">{biz.size}</span>
+                  <span className="r-chip">{biz.role}</span>
                 </div>
+              </div>
 
-                {/* OVERALL */}
-                <div className="score-block">
-                  <div>
-                    <div className="big-n">{results.total}</div>
-                    <div className="big-sub">out of 36</div>
+              {/* HERO CARD */}
+              <div className="r-hero">
+                <div className="r-hero-top">
+                  <div className="r-hero-score-wrap">
+                    <div className="r-hero-score">{results.total}</div>
+                    <div className="r-hero-denom">out of 36</div>
                     <div className={`mat ${MATURITY(results.total,36).cls}`}>{MATURITY(results.total,36).label}</div>
                   </div>
-                  <p className="r-summary" dangerouslySetInnerHTML={{__html:results.summary?.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")}}/>
+                  <p className="r-hero-summary" dangerouslySetInnerHTML={{__html:results.summary?.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")}}/>
                 </div>
 
-                {/* TRACK SCORES */}
-                <div className="track-row">
+                {/* TRACK SCORES inside hero */}
+                <div className="track-row" style={{marginBottom:0}}>
                   {[
                     {cls:"tc1",name:"Readiness",s:results.aiS,m:results.aiM},
                     {cls:"tc2",name:"Operations",s:results.opsS,m:results.opsM},
@@ -852,148 +910,198 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
                   ].map((t,i)=>(
                     <div key={i} className={`tc ${t.cls}`}>
                       <div className="tc-name">{t.name}</div>
-                      <div className="tc-num">{t.s}<span style={{fontSize:"1rem",color:"var(--dim)"}}>/12</span></div>
+                      <div className="tc-num">{t.s}<span style={{fontSize:".9rem",color:"var(--dim)",fontFamily:"'Outfit',sans-serif",fontWeight:400}}>/12</span></div>
                       <div className="tc-mat">{t.m.label}</div>
                       <div className="bar"><div className="bar-f" style={{width:`${(t.s/12)*100}%`}}/></div>
                     </div>
                   ))}
                 </div>
+              </div>
 
-                {/* BLIND SPOTS */}
-                <div className="rsec">
-                  <div className="rsec-hdr">
-                    <div className="rsec-title">Your Blind Spots</div>
-                    <div className="rsec-sub">What you're not thinking about — but should be</div>
-                  </div>
-                  <div className="blind-grid">
-                    {results.blindSpots?.map((b,i)=>(
-                      <div key={i} className="blind-card">
-                        <div className="blind-icon">{b.icon}</div>
-                        <div className="blind-name">{b.title}</div>
-                        <div className="blind-desc">{b.desc}</div>
+              {/* TOP 3 ACTIONS — executive summary */}
+              <div className="exec-actions">
+                <div className="exec-actions-label">Executive Summary</div>
+                <div className="exec-actions-title">Top 3 actions for this month</div>
+                {results.quickWins?.slice(0,3).map((q,i)=>(
+                  <div key={i} className="exec-action">
+                    <div className="exec-action-num">{i+1}</div>
+                    <div style={{flex:1}}>
+                      <div className="exec-action-name">{q.title}</div>
+                      <div className="exec-action-desc">{q.desc}</div>
+                      <div className="exec-action-pills">
+                        <span className={`pill ${q.effortCls==="ef-low"?"pill-effort-low":q.effortCls==="ef-med"?"pill-effort-med":"pill-effort-high"}`}>Effort: {q.effort}</span>
+                        <span className="pill pill-impact">Impact: {q.impact}</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* QUICK WINS */}
-                <div className="rsec">
-                  <div className="rsec-hdr">
-                    <div className="rsec-title">Quick Wins</div>
-                    <div className="rsec-sub">High value · Matched to your situation</div>
-                  </div>
-                  <div className="qw">
-                    {results.quickWins?.map((q,i)=>(
-                      <div key={i} className="qw-card">
-                        <div>
-                          <span className={`qw-badge ${q.badge}`}>{q.badgeLabel}</span>
-                          <div className="qw-title">{q.title}</div>
-                          <div className="qw-desc">{q.desc}</div>
-                        </div>
-                        <div className="qw-effort">
-                          <div><div className="ef-label">Effort</div><div className={`ef-val ${q.effortCls}`}>{q.effort}</div></div>
-                          <div><div className="ef-label">Impact</div><div className="ef-val" style={{color:"var(--teal)"}}>{q.impact}</div></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* RECS */}
-                <div className="rsec">
-                  <div className="rsec-hdr">
-                    <div className="rsec-title">Personalized Recommendations</div>
-                    <div className="rsec-sub">Based on your specific answers</div>
-                  </div>
-                  {results.recommendations?.map((r,i)=>(
-                    <div key={i} className={`rec ${r.cls}`}>
-                      <div className="rec-hdr">
-                        <div className="rec-title">{r.title}</div>
-                        <span className="rec-tag">{r.tag}</span>
-                      </div>
-                      <div className="rec-body" dangerouslySetInnerHTML={{__html:r.body?.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")}}/>
                     </div>
-                  ))}
-                </div>
-
-                {/* ROADMAP */}
-                <div className="rsec">
-                  <div className="rsec-hdr">
-                    <div className="rsec-title">90-Day Roadmap</div>
-                    <div className="rsec-sub">Sequenced by effort and impact</div>
                   </div>
-                  <div className="roadmap">
-                    {results.roadmap?.map((ph,pi)=>(
-                      <div key={pi} className="rm-ph">
-                        <div className="rm-ph-hdr" onClick={()=>togPh(pi)}>
-                          <div className={`rm-dot ${ph.dotCls}`}/>
-                          <div className="rm-ph-name">{ph.phase}</div>
-                          <div className="rm-ph-time">{ph.timeline}</div>
-                          <div className={`rm-chev ${openPh[pi]?"open":""}`}>▼</div>
+                ))}
+              </div>
+
+              {/* EMAIL CAPTURE */}
+              <div className="email-capture">
+                {emailSent ? (
+                  <div className="email-sent">✓ Report sent — check your inbox at {emailInput}</div>
+                ) : (
+                  <>
+                    <div className="email-capture-title">Get a copy of this report</div>
+                    <p className="email-capture-desc">We'll email you the full report — scores, blind spots, recommendations, and 90-day roadmap.</p>
+                    <div className="email-row">
+                      <input className="finput" type="email" placeholder="you@company.com" value={emailInput} onChange={e=>setEmailInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendReport()}/>
+                      <button className="btn-email" disabled={!emailInput||emailSending} onClick={sendReport}>{emailSending?"Sending…":"Email My Report →"}</button>
+                    </div>
+                    {emailErr&&<div className="err">{emailErr}</div>}
+                  </>
+                )}
+              </div>
+
+              {/* COLLAPSIBLE: BLIND SPOTS */}
+              <div className="rsec">
+                <div className="rsec-hdr" onClick={()=>togSec("blind")}>
+                  <div className="rsec-hdr-left">
+                    <span className="rsec-icon">🔍</span>
+                    <span className="rsec-title">Your Blind Spots</span>
+                    <span className="rsec-count">{results.blindSpots?.length||3}</span>
+                  </div>
+                  <span className={`rsec-chev ${openSec.blind?"open":""}`}>▼</span>
+                </div>
+                {openSec.blind&&(
+                  <div className="rsec-body">
+                    <div className="blind-grid">
+                      {results.blindSpots?.map((b,i)=>(
+                        <div key={i} className="blind-card">
+                          <div className="blind-icon">{b.icon}</div>
+                          <div className="blind-name">{b.title}</div>
+                          <div className="blind-desc">{b.desc}</div>
                         </div>
-                        {openPh[pi]&&(
-                          <>
-                            <div className="rm-cols-hdr">
-                              <div className="rm-col-h">What Gets Built</div>
-                              <div className="rm-col-h">Effort</div>
-                              <div className="rm-col-h">Impact</div>
-                              <div className="rm-col-h">When</div>
-                            </div>
-                            {ph.items?.map((item,ii)=>(
-                              <div key={ii} className="rm-row" style={{background:ii%2===0?"#090c14":"#080b12"}}>
-                                <div>
-                                  <div className="rm-item-name">{item.name}</div>
-                                  <div className="rm-item-sub">{item.sub}</div>
-                                </div>
-                                <div className="rm-col"><div className={`rm-val ${item.effortCls}`}>{item.effort}</div></div>
-                                <div className="rm-col"><div className="rm-val" style={{color:"var(--teal)"}}>{item.impact}</div></div>
-                                <div className="rm-col"><div className="rm-val" style={{color:"var(--dim)"}}>{item.timeline}</div></div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* COLLAPSIBLE: ALL QUICK WINS */}
+              <div className="rsec">
+                <div className="rsec-hdr" onClick={()=>togSec("wins")}>
+                  <div className="rsec-hdr-left">
+                    <span className="rsec-icon">⚡</span>
+                    <span className="rsec-title">All Quick Wins</span>
+                    <span className="rsec-count">{results.quickWins?.length||4}</span>
+                  </div>
+                  <span className={`rsec-chev ${openSec.wins?"open":""}`}>▼</span>
+                </div>
+                {openSec.wins&&(
+                  <div className="rsec-body">
+                    <div className="qw">
+                      {results.quickWins?.map((q,i)=>(
+                        <div key={i} className="qw-card">
+                          <div>
+                            <span className={`qw-badge ${q.badge}`}>{q.badgeLabel}</span>
+                            <div className="qw-title">{q.title}</div>
+                            <div className="qw-desc">{q.desc}</div>
+                          </div>
+                          <div className="qw-effort">
+                            <div><div className="ef-label">Effort</div><div className={`ef-val ${q.effortCls}`}>{q.effort}</div></div>
+                            <div><div className="ef-label">Impact</div><div className="ef-val" style={{color:"var(--teal)"}}>{q.impact}</div></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* COLLAPSIBLE: RECOMMENDATIONS */}
+              <div className="rsec">
+                <div className="rsec-hdr" onClick={()=>togSec("recs")}>
+                  <div className="rsec-hdr-left">
+                    <span className="rsec-icon">🎯</span>
+                    <span className="rsec-title">Personalized Recommendations</span>
+                    <span className="rsec-count">{results.recommendations?.length||6}</span>
+                  </div>
+                  <span className={`rsec-chev ${openSec.recs?"open":""}`}>▼</span>
+                </div>
+                {openSec.recs&&(
+                  <div className="rsec-body">
+                    <div className="recs-list">
+                      {results.recommendations?.map((r,i)=>(
+                        <div key={i} className={`rec ${r.cls}`}>
+                          <div className="rec-hdr">
+                            <div className="rec-title">{r.title}</div>
+                            <span className="rec-tag">{r.tag}</span>
+                          </div>
+                          <div className="rec-body" dangerouslySetInnerHTML={{__html:r.body?.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")}}/>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* COLLAPSIBLE: ROADMAP */}
+              <div className="rsec">
+                <div className="rsec-hdr" onClick={()=>togSec("roadmap")}>
+                  <div className="rsec-hdr-left">
+                    <span className="rsec-icon">🗓</span>
+                    <span className="rsec-title">90-Day Roadmap</span>
+                    <span className="rsec-count">4 phases</span>
+                  </div>
+                  <span className={`rsec-chev ${openSec.roadmap?"open":""}`}>▼</span>
+                </div>
+                {openSec.roadmap&&(
+                  <div className="rsec-body">
+                    <div className="roadmap">
+                      {results.roadmap?.map((ph,pi)=>(
+                        <div key={pi} className="rm-ph">
+                          <div className="rm-ph-hdr" onClick={()=>setOpenPh(p=>({...p,[pi]:!p[pi]}))}>
+                            <div className={`rm-dot ${ph.dotCls}`}/>
+                            <div className="rm-ph-name">{ph.phase}</div>
+                            <span className="rm-ph-time">{ph.timeline}</span>
+                            <div className={`rm-chev ${openPh[pi]?"open":""}`}>▼</div>
+                          </div>
+                          {openPh[pi]&&(
+                            <>
+                              <div className="rm-cols-hdr">
+                                <div className="rm-col-h">What Gets Built</div>
+                                <div className="rm-col-h">Effort</div>
+                                <div className="rm-col-h">Impact</div>
+                                <div className="rm-col-h">When</div>
                               </div>
-                            ))}
-                          </>
-                        )}
-                      </div>
-                    ))}
+                              {ph.items?.map((item,ii)=>(
+                                <div key={ii} className="rm-row">
+                                  <div>
+                                    <div className="rm-item-name">{item.name}</div>
+                                    <div className="rm-item-sub">{item.sub}</div>
+                                  </div>
+                                  <div className="rm-col"><div className={`rm-val ${item.effortCls}`}>{item.effort}</div></div>
+                                  <div className="rm-col"><div className="rm-val" style={{color:"var(--teal)"}}>{item.impact}</div></div>
+                                  <div className="rm-col"><div className="rm-val" style={{color:"var(--dim)"}}>{item.timeline}</div></div>
+                                </div>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
+              </div>
 
-                {/* EMAIL CAPTURE */}
-                <div className="email-capture">
-                  {emailSent ? (
-                    <>
-                      <div className="email-capture-title">Report sent ✓</div>
-                      <p className="email-sent">Check your inbox — your full report is on its way to {emailInput}</p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="email-capture-title">Get a copy of this report</div>
-                      <p className="email-capture-desc">We'll email you the full report with your scores, blind spots, quick wins, and recommendations so you have it for reference.</p>
-                      <div className="email-row">
-                        <input className="finput" type="email" placeholder="you@company.com" value={emailInput} onChange={e=>setEmailInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendReport()}/>
-                        <button className="btn-email" disabled={!emailInput||emailSending} onClick={sendReport}>{emailSending?"Sending…":"Email My Report →"}</button>
-                      </div>
-                      {emailErr&&<div className="err">{emailErr}</div>}
-                    </>
-                  )}
-                </div>
-
-                {/* CTA */}
-                <div className="cta">
-                  <div className="cta-title">Let's build this together</div>
-                  <p className="cta-desc">Book a free 20-minute strategy call to review your top recommendations and identify the one change that will have the biggest impact on your business this month.</p>
-                  <div className="cta-btns">
-                    <button className="btn-p">Book Free Strategy Call →</button>
-                    <button className="btn-s" onClick={()=>{setStep("intro");setAns({ai:{},ops:{},growth:{},deep:{}});setTrack(0);setResults(null);setBiz({company:"",industry:"",size:"",role:""});setOpenPh({0:true,1:false,2:false,3:false});setEmailInput("");setEmailSent(false);setEmailErr("");}}>Start Over</button>
-                  </div>
-                </div>
-
-                <div className="r-footer">
-                  <div className="r-footer-txt">Business Operations Report · Confidential</div>
-                  <div className="r-footer-txt">{biz.company||"Your Business"} · {new Date().toLocaleDateString()}</div>
+              {/* CTA */}
+              <div className="cta">
+                <div className="cta-title">Let's build this together</div>
+                <p className="cta-desc">Book a free 20-minute strategy call to review your top recommendations and identify the one change that will have the biggest impact on your business this month.</p>
+                <div className="cta-btns">
+                  <button className="btn-p">Book Free Strategy Call →</button>
+                  <button className="btn-s" onClick={()=>{setStep("intro");setAns({ai:{},ops:{},growth:{},deep:{}});setTrack(0);setResults(null);setBiz({company:"",industry:"",size:"",role:""});setOpenPh({0:true,1:false,2:false,3:false});setOpenSec({blind:false,wins:false,recs:false,roadmap:false});setEmailInput("");setEmailSent(false);setEmailErr("");}}>Start Over</button>
                 </div>
               </div>
-            );
-          })()}
+
+              <div className="r-footer">
+                <div className="r-footer-txt">Business Operations Report · Confidential</div>
+                <div className="r-footer-txt">{biz.company||"Your Business"} · {new Date().toLocaleDateString()}</div>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>
