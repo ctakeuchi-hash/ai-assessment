@@ -1,3 +1,5 @@
+export const maxDuration = 60;
+
 export async function POST(req) {
   const { prompt } = await req.json()
   const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -8,7 +10,7 @@ export async function POST(req) {
       "anthropic-version": "2023-06-01"
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-6",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 4096,
       messages: [{ role: "user", content: prompt }]
     })
