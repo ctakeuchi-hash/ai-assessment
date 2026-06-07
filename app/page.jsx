@@ -91,10 +91,16 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font
 .ind-badge-dot{width:6px;height:6px;border-radius:50%;background:#a060f0}
 .ind-badge-txt{font-family:'DM Mono',monospace;font-size:.62rem;color:#8050c0;text-transform:uppercase;letter-spacing:.1em}
 
-/* EMAIL */
-.email-card{background:var(--surface);border:1px solid var(--border);padding:2rem;margin-bottom:1.5rem}
-.email-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:#f0ead8;margin-bottom:.5rem}
-.email-desc{font-size:.83rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.65}
+/* EMAIL CAPTURE (inline on results) */
+.email-capture{background:linear-gradient(135deg,#0a0c18,#0e0a04);border:1px solid #2a2010;padding:2rem;margin-bottom:2.5rem}
+.email-capture-title{font-family:'Cormorant Garamond',serif;font-size:1.35rem;color:#f0ead8;margin-bottom:.35rem}
+.email-capture-desc{font-size:.82rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.65}
+.email-row{display:flex;gap:.75rem;align-items:flex-start}
+.email-row .finput{flex:1}
+.btn-email{display:inline-flex;align-items:center;gap:.4rem;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:500;padding:.82rem 1.4rem;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.btn-email:hover{background:#140e02}
+.btn-email:disabled{opacity:.4;cursor:not-allowed}
+.email-sent{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;padding:.5rem 0}
 .err{background:#1a0808;border:1px solid #4a1818;color:#f08080;font-size:.78rem;padding:.65rem .9rem;margin-top:.75rem}
 
 /* LOADING */
@@ -454,11 +460,11 @@ const MATURITY = (s, max) => {
   return {label:"Advanced", cls:"mat-a"};
 };
 
-const STEPS = ["Your Business","Readiness","Operations","Growth","Industry","Report"];
+const STEPS = ["Your Business","Readiness","Operations","Growth","Industry Deep Dive","Your Report"];
 
 export default function App() {
   const [step, setStep] = useState("intro");
-  const [biz, setBiz] = useState({company:"",industry:"",size:"",role:"",email:""});
+  const [biz, setBiz] = useState({company:"",industry:"",size:"",role:""});
   const [ans, setAns] = useState({ai:{},ops:{},growth:{},deep:{}});
   const [track, setTrack] = useState(0);
   const [results, setResults] = useState(null);
@@ -466,6 +472,10 @@ export default function App() {
   const [loadStep, setLoadStep] = useState(0);
   const [err, setErr] = useState("");
   const [openPh, setOpenPh] = useState({0:true,1:false,2:false,3:false});
+  const [emailInput, setEmailInput] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailErr, setEmailErr] = useState("");
 
   const tracks = ["ai","ops","growth"];
   const curTrack = CORE[track];
@@ -481,7 +491,7 @@ export default function App() {
   const setA = (id, i, v) => setAns(p=>({...p,[id]:{...p[id],[i]:v}}));
 
   const prog = () => {
-    const map = {intro:0,bizinfo:10,track:15+(track/3)*50,deep:75,email:85,loading:100,results:100};
+    const map = {intro:0,bizinfo:10,track:15+(track/3)*50,deep:85,loading:100,results:100};
     return map[step] ?? 0;
   };
 
@@ -601,25 +611,29 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
       const parsed = JSON.parse(clean);
       setResults({aiS,opsS,grS,total,aiM,opsM,grM,...parsed});
       setStep("results");
-
-      /* save lead to Airtable (fire-and-forget, don't block UI) */
-      fetch("/api/save-lead",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          email:biz.email, company:biz.company, industry:biz.industry,
-          size:biz.size, role:biz.role,
-          scores:{ai:aiS, ops:opsS, growth:grS, overall:total},
-          report: parsed.summary || ""
-        })
-      }).catch(()=>{});
     } catch(e) {
-      setErr("Something went wrong. Please try again.");
-      setStep("email");
+      setErr("Something went wrong generating your report. Please try again.");
+      setStep("deep");
     } finally { setLoading(false); }
   };
 
-  const stepIdx = {intro:0,bizinfo:1,track:2+track,deep:5,email:6}[step]??7;
+  const sendReport = async () => {
+    if (!emailInput) return;
+    setEmailSending(true); setEmailErr("");
+    try {
+      const res = await fetch("/api/send-report",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({email:emailInput, biz:{...biz,email:emailInput}, results})
+      });
+      if (!res.ok) throw new Error("failed");
+      setEmailSent(true);
+    } catch(e) {
+      setEmailErr("Couldn't send the email. Please try again.");
+    } finally { setEmailSending(false); }
+  };
+
+  const stepIdx = {intro:0,bizinfo:1,track:2+track,deep:5}[step]??6;
 
   return (
     <>
@@ -635,8 +649,7 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
               <div className="nav-right">
                 {step==="bizinfo"?"Your Business":
                  step==="track"?`${curTrack.name} · Track ${track+1}/3`:
-                 step==="deep"?`${deepData.label}`:
-                 step==="email"?"Almost Done":""}
+                 step==="deep"?`${deepData.label}`:""}
               </div>
             )}
           </div>
@@ -767,29 +780,7 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
               ))}
               <div className="nav-row">
                 <button className="btn-back" onClick={()=>{setTrack(2);setStep("track")}}>← Back</button>
-                <button className="btn-next" disabled={!allDone("deep")} onClick={()=>setStep("email")}>Get My Report →</button>
-              </div>
-            </div>
-          )}
-
-          {/* ── EMAIL ── */}
-          {step==="email"&&(
-            <div>
-              <div className="sec-kicker k-gold">Final Step</div>
-              <h2 className="sec-title">Where should we send your report?</h2>
-              <p className="sec-desc">Your personalized report will be generated and emailed to you.</p>
-              <div className="email-card">
-                <div className="email-title">Your personalized report is ready to generate</div>
-                <p className="email-desc">Based on your answers and industry, we'll identify your specific gaps, blind spots, and a sequenced roadmap — written for your type of business.</p>
-                <div className="fgroup">
-                  <label className="flabel">Business Email</label>
-                  <input className="finput" type="email" placeholder="you@company.com" value={biz.email} onChange={e=>setBiz(p=>({...p,email:e.target.value}))}/>
-                </div>
-                {err&&<div className="err">{err}</div>}
-              </div>
-              <div className="nav-row">
-                <button className="btn-back" onClick={()=>setStep("deep")}>← Back</button>
-                <button className="btn-next" disabled={!biz.email||loading} onClick={generate}>Generate Report →</button>
+                <button className="btn-next" disabled={!allDone("deep")||loading} onClick={generate}>Get My Report →</button>
               </div>
             </div>
           )}
@@ -949,13 +940,33 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
                   </div>
                 </div>
 
+                {/* EMAIL CAPTURE */}
+                <div className="email-capture">
+                  {emailSent ? (
+                    <>
+                      <div className="email-capture-title">Report sent ✓</div>
+                      <p className="email-sent">Check your inbox — your full report is on its way to {emailInput}</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="email-capture-title">Get a copy of this report</div>
+                      <p className="email-capture-desc">We'll email you the full report with your scores, blind spots, quick wins, and recommendations so you have it for reference.</p>
+                      <div className="email-row">
+                        <input className="finput" type="email" placeholder="you@company.com" value={emailInput} onChange={e=>setEmailInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendReport()}/>
+                        <button className="btn-email" disabled={!emailInput||emailSending} onClick={sendReport}>{emailSending?"Sending…":"Email My Report →"}</button>
+                      </div>
+                      {emailErr&&<div className="err">{emailErr}</div>}
+                    </>
+                  )}
+                </div>
+
                 {/* CTA */}
                 <div className="cta">
                   <div className="cta-title">Let's build this together</div>
                   <p className="cta-desc">Book a free 20-minute strategy call to review your top recommendations and identify the one change that will have the biggest impact on your business this month.</p>
                   <div className="cta-btns">
                     <button className="btn-p">Book Free Strategy Call →</button>
-                    <button className="btn-s" onClick={()=>{setStep("intro");setAns({ai:{},ops:{},growth:{},deep:{}});setTrack(0);setResults(null);setBiz({company:"",industry:"",size:"",role:"",email:""});setOpenPh({0:true,1:false,2:false,3:false})}}>Start Over</button>
+                    <button className="btn-s" onClick={()=>{setStep("intro");setAns({ai:{},ops:{},growth:{},deep:{}});setTrack(0);setResults(null);setBiz({company:"",industry:"",size:"",role:""});setOpenPh({0:true,1:false,2:false,3:false});setEmailInput("");setEmailSent(false);setEmailErr("");}}>Start Over</button>
                   </div>
                 </div>
 
