@@ -496,16 +496,17 @@ export default function App() {
   };
 
   const generate = async () => {
-    setLoading(true); setStep("loading"); setErr("");
+    setLoading(true); setStep("loading"); setErr(""); setLoadStep(0);
     const aiS=score("ai"), opsS=score("ops"), grS=score("growth"), dpS=score("deep");
     const total = aiS+opsS+grS;
     const aiM=MATURITY(aiS,12), opsM=MATURITY(opsS,12), grM=MATURITY(grS,12);
 
-    const loadSeq = ["Reviewing your answers","Analyzing industry patterns","Identifying blind spots","Building your roadmap"];
-    for(let i=0;i<loadSeq.length;i++){
-      setLoadStep(i);
-      await new Promise(r=>setTimeout(r,900));
-    }
+    // Animate loading steps in parallel with API call
+    let animIdx = 0;
+    const animInterval = setInterval(()=>{
+      animIdx = Math.min(animIdx+1, 3);
+      setLoadStep(animIdx);
+    }, 1800);
 
     const indCtx = IND_CONTEXT[biz.industry] || IND_CONTEXT["Other"];
     const deepQs = deepData.questions.map((q,i)=>`Q: ${q.text}\nA: ${q.opts[ans.deep[i]??0]}`).join("\n");
@@ -608,14 +609,19 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || "API error");
       const txt = data.content?.find(b=>b.type==="text")?.text||"";
-      const clean = txt.replace(/```json|```/g,"").trim();
-      const parsed = JSON.parse(clean);
+      // Extract JSON: find first { to last }
+      const start = txt.indexOf("{");
+      const end = txt.lastIndexOf("}");
+      if (start === -1 || end === -1) throw new Error("No JSON in response");
+      const parsed = JSON.parse(txt.slice(start, end+1));
       setResults({aiS,opsS,grS,total,aiM,opsM,grM,...parsed});
       setStep("results");
     } catch(e) {
-      setErr("Something went wrong generating your report. Please try again.");
-      setStep("deep");
-    } finally { setLoading(false); }
+      setErr("Something went wrong. Please try again.");
+    } finally {
+      clearInterval(animInterval);
+      setLoading(false);
+    }
   };
 
   const sendReport = async () => {
@@ -789,16 +795,26 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
           {/* ── LOADING ── */}
           {step==="loading"&&(
             <div className="loading">
-              <div className="spin"/>
-              <div className="load-title">Analyzing your business…</div>
-              <p className="load-sub">Personalizing your report for {biz.industry}.</p>
-              <ul className="load-steps">
-                {["Reviewing your answers","Analyzing industry patterns","Identifying your blind spots","Building your 90-day roadmap"].map((s,i)=>(
-                  <li key={i} className={loadStep>i?"ls-done":loadStep===i?"ls-active":""}>
-                    {loadStep>i?"✓ ":loadStep===i?"→ ":"  "}{s}
-                  </li>
-                ))}
-              </ul>
+              {err ? (
+                <>
+                  <div className="load-title" style={{color:"var(--rose)"}}>Something went wrong</div>
+                  <p className="load-sub" style={{marginBottom:"1.5rem"}}>{err}</p>
+                  <button className="btn-next" onClick={()=>{setErr("");setStep("deep");}}>← Try Again</button>
+                </>
+              ) : (
+                <>
+                  <div className="spin"/>
+                  <div className="load-title">Analyzing your business…</div>
+                  <p className="load-sub">Personalizing your report for {biz.industry}.</p>
+                  <ul className="load-steps">
+                    {["Reviewing your answers","Analyzing industry patterns","Identifying your blind spots","Building your 90-day roadmap"].map((s,i)=>(
+                      <li key={i} className={loadStep>i?"ls-done":loadStep===i?"ls-active":""}>
+                        {loadStep>i?"✓ ":loadStep===i?"→ ":"  "}{s}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </div>
           )}
 
