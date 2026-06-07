@@ -606,6 +606,7 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
         body:JSON.stringify({prompt})
       });
       const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || "API error");
       const txt = data.content?.find(b=>b.type==="text")?.text||"";
       const clean = txt.replace(/```json|```/g,"").trim();
       const parsed = JSON.parse(clean);
@@ -644,7 +645,7 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
 
           {/* NAV */}
           <div className="nav">
-            <div className="brand">Business Assessment</div>
+            <div className="brand">Business Assessment <span style={{opacity:.4,fontSize:".55rem",letterSpacing:".06em"}}>v1.2</span></div>
             {step!=="intro"&&step!=="results"&&step!=="loading"&&(
               <div className="nav-right">
                 {step==="bizinfo"?"Your Business":
