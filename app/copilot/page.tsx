@@ -237,8 +237,9 @@ export default function CopilotPage() {
           <a href="/" style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#3a4a60', textDecoration: 'none', flexShrink: 0 }}>
             ← Back
           </a>
-          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#38d4a0', flex: 1 }}>
+          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#38d4a0', flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             Meeting Copilot
+            <span style={{ fontSize: '0.48rem', color: '#2a3a50', letterSpacing: '0.08em', background: '#0e1018', border: '1px solid #1c2030', padding: '0.1rem 0.35rem' }}>v1.0</span>
           </span>
           {/* Transcription mode toggle — only when not recording */}
           {!recording && (
