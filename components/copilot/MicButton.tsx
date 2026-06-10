@@ -11,7 +11,7 @@ export function MicButton({ recording, supported, onToggle }: MicButtonProps) {
     <button
       onClick={onToggle}
       disabled={!supported}
-      title={!supported ? 'Web Speech API requires Chrome or Edge' : recording ? 'Stop recording' : 'Start recording'}
+      title={recording ? 'Stop recording' : 'Start recording'}
       style={{
         display: 'flex',
         alignItems: 'center',

@@ -273,7 +273,7 @@ export default function CopilotPage() {
           >
             History
           </a>
-          <MicButton recording={recording} supported={supported} onToggle={toggleRecording} />
+          <MicButton recording={recording} supported={transcriptionMode === 'deepgram' || supported} onToggle={toggleRecording} />
         </div>
 
         {transcriptionMode === 'webspeech' && !supported && (
