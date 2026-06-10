@@ -3,7 +3,9 @@ import type { TranscriptSegment, CopilotSuggestion, CurrentStateMap } from '@/ty
 import type { MeetingSummary } from './anthropic';
 
 export async function createSession(): Promise<string | null> {
-  const { data, error } = await getSupabase()
+  const db = getSupabase();
+  if (!db) return null;
+  const { data, error } = await db
     .from('copilot_sessions')
     .insert({ title: `Call — ${new Date().toLocaleString()}` })
     .select('id')
@@ -13,6 +15,8 @@ export async function createSession(): Promise<string | null> {
 }
 
 export async function endSession(sessionId: string, summary?: MeetingSummary | null, currentStateMap?: CurrentStateMap | null) {
+  const db = getSupabase();
+  if (!db) return;
   const patch: Record<string, unknown> = { ended_at: new Date().toISOString() };
   if (summary) {
     patch.summary_tldr = summary.tldr;
@@ -23,12 +27,14 @@ export async function endSession(sessionId: string, summary?: MeetingSummary | n
   if (currentStateMap) {
     patch.current_state_map = currentStateMap;
   }
-  const { error } = await getSupabase().from('copilot_sessions').update(patch).eq('id', sessionId);
+  const { error } = await db.from('copilot_sessions').update(patch).eq('id', sessionId);
   if (error) console.error('endSession', error);
 }
 
 export async function updateSessionSummary(sessionId: string, summary: MeetingSummary) {
-  const { error } = await getSupabase().from('copilot_sessions').update({
+  const db = getSupabase();
+  if (!db) return;
+  const { error } = await db.from('copilot_sessions').update({
     summary_tldr: summary.tldr,
     summary_topics: summary.topics,
     summary_client_needs: summary.clientNeeds,
@@ -38,14 +44,18 @@ export async function updateSessionSummary(sessionId: string, summary: MeetingSu
 }
 
 export async function updateSessionStateMap(sessionId: string, map: CurrentStateMap) {
-  const { error } = await getSupabase().from('copilot_sessions').update({
+  const db = getSupabase();
+  if (!db) return;
+  const { error } = await db.from('copilot_sessions').update({
     current_state_map: map,
   }).eq('id', sessionId);
   if (error) console.error('updateSessionStateMap', error);
 }
 
 export async function saveSegment(sessionId: string, segment: TranscriptSegment) {
-  const { error } = await getSupabase().from('copilot_segments').insert({
+  const db = getSupabase();
+  if (!db) return;
+  const { error } = await db.from('copilot_segments').insert({
     session_id: sessionId,
     text: segment.text,
     timestamp_ms: segment.timestamp,
@@ -54,6 +64,8 @@ export async function saveSegment(sessionId: string, segment: TranscriptSegment)
 }
 
 export async function saveSuggestions(sessionId: string, suggestions: CopilotSuggestion[]) {
+  const db = getSupabase();
+  if (!db) return;
   const rows = suggestions.map(s => ({
     session_id: sessionId,
     type: s.type,
@@ -68,7 +80,7 @@ export async function saveSuggestions(sessionId: string, suggestions: CopilotSug
     likely_objection: s.likelyObjection,
     objection_response: s.objectionResponse,
   }));
-  const { error } = await getSupabase().from('copilot_suggestions').insert(rows);
+  const { error } = await db.from('copilot_suggestions').insert(rows);
   if (error) console.error('saveSuggestions', error);
 }
 
@@ -82,7 +94,9 @@ export interface SessionRow {
 }
 
 export async function listSessions(): Promise<SessionRow[]> {
-  const { data, error } = await getSupabase()
+  const db = getSupabase();
+  if (!db) return [];
+  const { data, error } = await db
     .from('copilot_sessions')
     .select('id, created_at, ended_at, title, segment_count, summary_tldr')
     .order('created_at', { ascending: false })
@@ -104,7 +118,9 @@ export interface SessionDetail {
 }
 
 export async function getSession(id: string): Promise<SessionDetail | null> {
-  const { data, error } = await getSupabase()
+  const db = getSupabase();
+  if (!db) return null;
+  const { data, error } = await db
     .from('copilot_sessions')
     .select('id, created_at, ended_at, title, summary_tldr, summary_topics, summary_client_needs, summary_open_questions, current_state_map')
     .eq('id', id)
@@ -114,7 +130,9 @@ export async function getSession(id: string): Promise<SessionDetail | null> {
 }
 
 export async function getSessionSegments(sessionId: string): Promise<TranscriptSegment[]> {
-  const { data, error } = await getSupabase()
+  const db = getSupabase();
+  if (!db) return [];
+  const { data, error } = await db
     .from('copilot_segments')
     .select('id, text, timestamp_ms')
     .eq('session_id', sessionId)
@@ -124,7 +142,9 @@ export async function getSessionSegments(sessionId: string): Promise<TranscriptS
 }
 
 export async function getSessionSuggestions(sessionId: string): Promise<CopilotSuggestion[]> {
-  const { data, error } = await getSupabase()
+  const db = getSupabase();
+  if (!db) return [];
+  const { data, error } = await db
     .from('copilot_suggestions')
     .select('*')
     .eq('session_id', sessionId)
