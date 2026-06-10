@@ -164,7 +164,7 @@ export default function CopilotPage() {
           });
         }
       } catch {}
-    }, 4000);
+    }, 2000);
   }, [context, triggerSummary, triggerStateExtraction]);
 
   const toggleRecording = useCallback(async () => {
