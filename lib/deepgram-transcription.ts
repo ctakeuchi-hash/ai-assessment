@@ -11,6 +11,7 @@ function getSupportedMimeType(): string {
 export function startDeepgramTranscription(
   onSegment: (text: string) => void,
   onWarning?: (msg: string) => void,
+  onActivity?: (active: boolean) => void,
 ): () => void {
   let stopped = false;
   let stream: MediaStream | null = null;
@@ -21,19 +22,17 @@ export function startDeepgramTranscription(
     try {
       const s = await navigator.mediaDevices.getDisplayMedia({
         audio: { echoCancellation: false, noiseSuppression: false, sampleRate: 16000 } as MediaTrackConstraints,
-        video: true, // required by some browsers; video track is stopped immediately
+        video: true,
       });
       s.getVideoTracks().forEach(t => t.stop());
 
-      // Warn if the browser gave us no audio tracks (e.g. user picked a Window instead of a Tab)
       if (s.getAudioTracks().length === 0) {
-        onWarning?.('No audio captured — the browser only provides audio for browser tabs (pick "Chrome Tab" and check "Share audio"), or for full screen on Windows. Falling back to mic.');
+        onWarning?.('No audio captured — pick a Chrome Tab with "Share audio" checked, not a Window. Falling back to mic.');
         return navigator.mediaDevices.getUserMedia({ audio: true });
       }
 
       return s;
     } catch {
-      // User cancelled or getDisplayMedia not supported — fall back to mic
       return navigator.mediaDevices.getUserMedia({ audio: true });
     }
   }
@@ -58,6 +57,7 @@ export function startDeepgramTranscription(
       if (stopped || chunks.length === 0) return;
 
       const blob = new Blob(chunks, { type: mimeType });
+      onActivity?.(true);
 
       try {
         const res = await fetch('/api/transcribe', {
@@ -65,13 +65,20 @@ export function startDeepgramTranscription(
           headers: { 'Content-Type': mimeType },
           body: blob,
         });
+
         if (res.ok) {
           const data = await res.json();
           const text: string = data.text?.trim() ?? '';
           if (text.length > 0) onSegment(text);
+        } else {
+          const data = await res.json().catch(() => ({}));
+          if (data.errorCode === 'no_api_key') {
+            onWarning?.('DEEPGRAM_API_KEY is not set in Vercel. Add it in Vercel → Settings → Environment Variables, then redeploy.');
+          }
         }
       } catch {}
 
+      onActivity?.(false);
       if (!stopped) runCycle();
     };
 
@@ -89,6 +96,7 @@ export function startDeepgramTranscription(
     s.getAudioTracks()[0]?.addEventListener('ended', () => {
       stopped = true;
       if (cycleTimeout) clearTimeout(cycleTimeout);
+      onActivity?.(false);
     });
     runCycle();
   }).catch(() => {});
@@ -101,5 +109,6 @@ export function startDeepgramTranscription(
       recorder.stop();
     }
     stream?.getTracks().forEach(t => t.stop());
+    onActivity?.(false);
   };
 }

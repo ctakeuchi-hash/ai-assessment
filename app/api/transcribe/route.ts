@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(req: NextRequest) {
   const apiKey = process.env.DEEPGRAM_API_KEY;
   if (!apiKey) {
-    return NextResponse.json({ error: 'DEEPGRAM_API_KEY not configured' }, { status: 500 });
+    return NextResponse.json({ error: 'DEEPGRAM_API_KEY not configured', errorCode: 'no_api_key' }, { status: 500 });
   }
 
   const contentType = req.headers.get('content-type') ?? 'audio/webm';

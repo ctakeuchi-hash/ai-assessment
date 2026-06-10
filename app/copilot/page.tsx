@@ -60,6 +60,7 @@ export default function CopilotPage() {
   const [briefHasNewData, setBriefHasNewData] = useState(false);
 
   const [audioWarning, setAudioWarning] = useState<string | null>(null);
+  const [sendingChunk, setSendingChunk] = useState(false);
 
   const [context, setContext] = useState<CopilotContext>(DEFAULT_CONTEXT);
   const [leftTab, setLeftTab] = useState<LeftTab>('transcript');
@@ -179,7 +180,7 @@ export default function CopilotPage() {
       const sid = await createSession();
       sessionIdRef.current = sid;
       const stop = transcriptionMode === 'deepgram'
-        ? startDeepgramTranscription(handleSegment, setAudioWarning)
+        ? startDeepgramTranscription(handleSegment, setAudioWarning, setSendingChunk)
         : startTranscription(handleSegment);
       stopFnRef.current = stop;
       setRecording(true);
@@ -282,6 +283,11 @@ export default function CopilotPage() {
             History
           </a>
           <MicButton recording={recording} supported={supported} onToggle={toggleRecording} />
+          {recording && sendingChunk && (
+            <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.5rem', color: '#3a4a60', textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>
+              sending…
+            </span>
+          )}
         </div>
 
         {transcriptionMode === 'webspeech' && !supported && (
