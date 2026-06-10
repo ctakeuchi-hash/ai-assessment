@@ -49,7 +49,7 @@ export default function CopilotPage() {
   const router = useRouter();
 
   const [recording, setRecording] = useState(false);
-  const [supported] = useState(() => typeof window !== 'undefined' && isSpeechRecognitionSupported());
+  const [supported, setSupported] = useState(true); // optimistic default; useEffect corrects for webspeech mode
 
   const [segments, setSegments] = useState<TranscriptSegment[]>([]);
   const [suggestions, setSuggestions] = useState<CopilotSuggestion[]>([]);
@@ -72,6 +72,11 @@ export default function CopilotPage() {
   const sessionIdRef = useRef<string | null>(null);
   const summaryRef = useRef<SummaryType | null>(null);
   const currentStateMapRef = useRef<CurrentStateMap | null>(null);
+
+  // Deepgram always works; webspeech needs Chrome/Edge
+  useEffect(() => {
+    setSupported(transcriptionMode === 'deepgram' || isSpeechRecognitionSupported());
+  }, [transcriptionMode]);
 
   // Load context from localStorage
   useEffect(() => {
@@ -273,7 +278,7 @@ export default function CopilotPage() {
           >
             History
           </a>
-          <MicButton recording={recording} supported={transcriptionMode === 'deepgram' || supported} onToggle={toggleRecording} />
+          <MicButton recording={recording} supported={supported} onToggle={toggleRecording} />
         </div>
 
         {transcriptionMode === 'webspeech' && !supported && (
