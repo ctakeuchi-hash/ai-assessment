@@ -23,7 +23,7 @@ interface SuggestionCardProps {
 }
 
 export function SuggestionCard({ suggestion, onSendToWorkflow }: SuggestionCardProps) {
-  const [objectionOpen, setObjectionOpen] = useState(false);
+  const [objectionOpen, setObjectionOpen] = useState(true);
   const styles = TYPE_STYLES[suggestion.type] ?? TYPE_STYLES.solution;
   const isClosing = suggestion.type === 'closing';
 
