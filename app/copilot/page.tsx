@@ -18,8 +18,8 @@ import type { MeetingSummary as SummaryType } from '@/lib/anthropic';
 const DEFAULT_CONTEXT: CopilotContext = { systemPrompt: '', knowledgeBase: '' };
 const STORAGE_KEY = 'copilot-context';
 const MAX_SUGGESTIONS = 5;
+const SUMMARY_EVERY_N = 8;
 const STATE_EVERY_N = 15;
-const SUMMARY_INTERVAL_MS = 30_000;
 
 type RightTab = 'suggestions' | 'brief' | 'summary';
 type LeftTab = 'transcript' | 'context';
@@ -69,8 +69,8 @@ export default function CopilotPage() {
 
   const stopFnRef = useRef<(() => void) | null>(null);
   const suggestionDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const summaryIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fullTranscriptRef = useRef('');
+  const lastSummarizedAtRef = useRef(0);
   const lastExtractedAtRef = useRef(0);
   const sessionIdRef = useRef<string | null>(null);
   const summaryRef = useRef<SummaryType | null>(null);
@@ -134,10 +134,16 @@ export default function CopilotPage() {
 
     setSegments(prev => {
       const next = [...prev, segment];
+      const full = next.map(s => s.text).join(' ');
+
+      if (next.length - lastSummarizedAtRef.current >= SUMMARY_EVERY_N) {
+        lastSummarizedAtRef.current = next.length;
+        triggerSummary(full);
+      }
 
       if (next.length - lastExtractedAtRef.current >= STATE_EVERY_N) {
         lastExtractedAtRef.current = next.length;
-        triggerStateExtraction(next.map(s => s.text).join(' '));
+        triggerStateExtraction(full);
       }
 
       return next;
@@ -159,16 +165,12 @@ export default function CopilotPage() {
         }
       } catch {}
     }, 4000);
-  }, [context, triggerStateExtraction]);
+  }, [context, triggerSummary, triggerStateExtraction]);
 
   const toggleRecording = useCallback(async () => {
     if (recording) {
       stopFnRef.current?.();
       stopFnRef.current = null;
-      if (summaryIntervalRef.current) {
-        clearInterval(summaryIntervalRef.current);
-        summaryIntervalRef.current = null;
-      }
       setRecording(false);
       if (sessionIdRef.current) {
         await endSession(sessionIdRef.current, summaryRef.current, currentStateMapRef.current);
@@ -182,22 +184,12 @@ export default function CopilotPage() {
         : startTranscription(handleSegment);
       stopFnRef.current = stop;
       setRecording(true);
-      // Summarize every 30s while recording
-      summaryIntervalRef.current = setInterval(() => {
-        if (fullTranscriptRef.current.trim().length > 80) {
-          triggerSummary(fullTranscriptRef.current);
-        }
-      }, SUMMARY_INTERVAL_MS);
     }
-  }, [recording, transcriptionMode, handleSegment, triggerSummary]);
+  }, [recording, transcriptionMode, handleSegment]);
 
   const handleReset = async () => {
     stopFnRef.current?.();
     stopFnRef.current = null;
-    if (summaryIntervalRef.current) {
-      clearInterval(summaryIntervalRef.current);
-      summaryIntervalRef.current = null;
-    }
     if (sessionIdRef.current) {
       await endSession(sessionIdRef.current, summaryRef.current, currentStateMapRef.current);
       sessionIdRef.current = null;
