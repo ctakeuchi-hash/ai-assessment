@@ -9,7 +9,8 @@ function getSupportedMimeType(): string {
 }
 
 export function startDeepgramTranscription(
-  onSegment: (text: string) => void
+  onSegment: (text: string) => void,
+  onWarning?: (msg: string) => void,
 ): () => void {
   let stopped = false;
   let stream: MediaStream | null = null;
@@ -17,17 +18,22 @@ export function startDeepgramTranscription(
   let cycleTimeout: ReturnType<typeof setTimeout> | null = null;
 
   async function getStream(): Promise<MediaStream> {
-    // Try system audio first (captures both sides of the call without any plugin)
     try {
       const s = await navigator.mediaDevices.getDisplayMedia({
         audio: { echoCancellation: false, noiseSuppression: false, sampleRate: 16000 } as MediaTrackConstraints,
-        video: true, // required by some browsers; we stop the video track immediately
+        video: true, // required by some browsers; video track is stopped immediately
       });
-      // Drop the video track — we only want audio
       s.getVideoTracks().forEach(t => t.stop());
+
+      // Warn if the browser gave us no audio tracks (e.g. user picked a Window instead of a Tab)
+      if (s.getAudioTracks().length === 0) {
+        onWarning?.('No audio captured — the browser only provides audio for browser tabs (pick "Chrome Tab" and check "Share audio"), or for full screen on Windows. Falling back to mic.');
+        return navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+
       return s;
     } catch {
-      // User cancelled or system audio not available — fall back to mic
+      // User cancelled or getDisplayMedia not supported — fall back to mic
       return navigator.mediaDevices.getUserMedia({ audio: true });
     }
   }
@@ -66,13 +72,11 @@ export function startDeepgramTranscription(
         }
       } catch {}
 
-      // Start next cycle immediately
       if (!stopped) runCycle();
     };
 
     recorder.start();
 
-    // Stop after 4 seconds to flush chunk
     cycleTimeout = setTimeout(() => {
       if (recorder && recorder.state === 'recording') {
         recorder.stop();
@@ -82,7 +86,6 @@ export function startDeepgramTranscription(
 
   getStream().then((s) => {
     stream = s;
-    // If stream ends (user stops sharing), clean up
     s.getAudioTracks()[0]?.addEventListener('ended', () => {
       stopped = true;
       if (cycleTimeout) clearTimeout(cycleTimeout);
@@ -94,7 +97,7 @@ export function startDeepgramTranscription(
     stopped = true;
     if (cycleTimeout) clearTimeout(cycleTimeout);
     if (recorder && recorder.state === 'recording') {
-      recorder.onstop = null; // prevent next cycle
+      recorder.onstop = null;
       recorder.stop();
     }
     stream?.getTracks().forEach(t => t.stop());

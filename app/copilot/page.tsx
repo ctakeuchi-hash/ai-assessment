@@ -59,6 +59,8 @@ export default function CopilotPage() {
   const [extractingState, setExtractingState] = useState(false);
   const [briefHasNewData, setBriefHasNewData] = useState(false);
 
+  const [audioWarning, setAudioWarning] = useState<string | null>(null);
+
   const [context, setContext] = useState<CopilotContext>(DEFAULT_CONTEXT);
   const [leftTab, setLeftTab] = useState<LeftTab>('transcript');
   const [rightTab, setRightTab] = useState<RightTab>('suggestions');
@@ -173,10 +175,11 @@ export default function CopilotPage() {
         await endSession(sessionIdRef.current, summaryRef.current, currentStateMapRef.current);
       }
     } else {
+      setAudioWarning(null);
       const sid = await createSession();
       sessionIdRef.current = sid;
       const stop = transcriptionMode === 'deepgram'
-        ? startDeepgramTranscription(handleSegment)
+        ? startDeepgramTranscription(handleSegment, setAudioWarning)
         : startTranscription(handleSegment);
       stopFnRef.current = stop;
       setRecording(true);
@@ -286,9 +289,14 @@ export default function CopilotPage() {
             Mic mode requires Chrome or Edge. Switch to System mode for any browser.
           </div>
         )}
-        {transcriptionMode === 'deepgram' && !recording && (
+        {transcriptionMode === 'deepgram' && !recording && !audioWarning && (
           <div style={{ background: '#020810', borderBottom: '1px solid #0a1830', color: '#4a9eff', fontSize: '0.72rem', padding: '0.4rem 1.25rem', flexShrink: 0, fontFamily: "'DM Mono', monospace", letterSpacing: '0.04em' }}>
-            System mode: browser will ask what to share → select your screen or app with "Share audio" checked.
+            System mode: in the share dialog, pick a <strong>Chrome Tab</strong> (with "Share audio" checked) — not a Window or Screen.
+          </div>
+        )}
+        {audioWarning && (
+          <div style={{ background: '#180e02', borderBottom: '1px solid #3a2808', color: '#e8a020', fontSize: '0.72rem', padding: '0.4rem 1.25rem', flexShrink: 0, fontFamily: "'DM Mono', monospace", letterSpacing: '0.04em' }}>
+            ⚠ {audioWarning}
           </div>
         )}
 
