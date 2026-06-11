@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 /* ── FONTS ── */
 const GFONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,400&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');`;
@@ -466,6 +466,8 @@ export default function App() {
   const [loadStep, setLoadStep] = useState(0);
   const [err, setErr] = useState("");
   const [openPh, setOpenPh] = useState({0:true,1:false,2:false,3:false});
+
+  useEffect(() => { window.scrollTo(0, 0); }, [step, track]);
 
   const tracks = ["ai","ops","growth"];
   const curTrack = CORE[track];
