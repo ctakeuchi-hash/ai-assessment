@@ -100,13 +100,13 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font
 .err{background:#1a0808;border:1px solid #4a1818;color:#f08080;font-size:.78rem;padding:.65rem .9rem;margin-top:.75rem}
 
 /* LOADING */
-.loading{text-align:center;padding:5rem 0}
+.loading{text-align:center;padding:5rem 1.5rem}
 .spin{width:44px;height:44px;border:1.5px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 2rem}
 @keyframes spin{to{transform:rotate(360deg)}}
 .load-title{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:#f0ead8;margin-bottom:.5rem}
 .load-sub{font-size:.83rem;color:var(--muted);margin-bottom:1.5rem}
-.load-steps{list-style:none}
-.load-steps li{font-family:'DM Mono',monospace;font-size:.63rem;color:var(--dim);letter-spacing:.08em;padding:.25rem 0;transition:color .3s}
+.load-steps{list-style:none;display:inline-block;text-align:left;max-width:100%}
+.load-steps li{font-family:'DM Mono',monospace;font-size:.63rem;color:var(--dim);letter-spacing:.08em;padding:.25rem 0;transition:color .3s;white-space:normal;word-break:break-word}
 .load-steps li.ls-active{color:var(--gold)}
 .load-steps li.ls-done{color:var(--muted)}
 
@@ -469,7 +469,11 @@ export default function App() {
   const [err, setErr] = useState("");
   const [openPh, setOpenPh] = useState({0:true,1:false,2:false,3:false});
 
-  useEffect(() => { window.scrollTo(0, 0); }, [step, track]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [step, track]);
 
   const tracks = ["ai","ops","growth"];
   const curTrack = CORE[track];
