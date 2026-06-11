@@ -618,7 +618,8 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
         })
       }).catch(()=>{});
     } catch(e) {
-      setErr("Something went wrong. Please try again.");
+      console.error("Report generation error:", e);
+      setErr("Something went wrong generating your report. Please try again.");
       setStep("email");
     } finally { setLoading(false); }
   };
