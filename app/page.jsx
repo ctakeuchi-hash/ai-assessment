@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 
+const VERSION = "1.3";
+
 /* ── FONTS ── */
 const GFONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,400&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');`;
 
@@ -632,7 +634,7 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
 
           {/* NAV */}
           <div className="nav">
-            <div className="brand">Business Assessment</div>
+            <div className="brand">Business Assessment<br/><span style={{fontSize:".55rem",opacity:.5,letterSpacing:".1em"}}>v{VERSION}</span></div>
             {step!=="intro"&&step!=="results"&&step!=="loading"&&(
               <div className="nav-right">
                 {step==="bizinfo"?"Your Business":
