@@ -604,7 +604,9 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
         body:JSON.stringify({prompt})
       });
       const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
       const txt = data.content?.find(b=>b.type==="text")?.text||"";
+      if (!txt) throw new Error("Empty response from API");
       const clean = txt.replace(/```json|```/g,"").trim();
       const parsed = JSON.parse(clean);
       setResults({aiS,opsS,grS,total,aiM,opsM,grM,...parsed});
@@ -623,7 +625,7 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
       }).catch(()=>{});
     } catch(e) {
       console.error("Report generation error:", e);
-      setErr("Something went wrong generating your report. Please try again.");
+      setErr(e.message || "Something went wrong generating your report. Please try again.");
       setStep("email");
     } finally { setLoading(false); }
   };
