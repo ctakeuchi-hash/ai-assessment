@@ -539,11 +539,6 @@ ${deepQs}
 
 INDUSTRY FOCUS:
 ${indCtx}
-${(freeform.painPoint||freeform.growthBlocker||freeform.priority)?`
-OPEN-ENDED ANSWERS — quote these directly in your recommendations where relevant:
-${freeform.painPoint?`• Biggest pain point / time sink: "${freeform.painPoint}"`:""}
-${freeform.growthBlocker?`• Holding back growth: "${freeform.growthBlocker}"`:""}
-${freeform.priority?`• Top priority this month: "${freeform.priority}"`:""}`:""}
 
 CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every field must be SHORT and punchy — no long sentences.
 
@@ -626,7 +621,8 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
           email:biz.email, company:biz.company, industry:biz.industry,
           size:biz.size, role:biz.role,
           scores:{ai:aiS, ops:opsS, growth:grS, overall:total},
-          report: parsed.summary || ""
+          report: parsed.summary || "",
+          freeform
         })
       }).catch(()=>{});
       fetch("/api/send-email",{

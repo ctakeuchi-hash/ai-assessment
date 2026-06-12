@@ -1,5 +1,5 @@
 export async function POST(req) {
-  const { email, company, industry, size, role, scores, report } = await req.json()
+  const { email, company, industry, size, role, scores, report, freeform } = await req.json()
 
   const pat = process.env.AIRTABLE_PAT
   const baseId = process.env.AIRTABLE_BASE_ID
@@ -28,6 +28,9 @@ export async function POST(req) {
           "Growth Score": scores?.growth ?? 0,
           "Overall Score": scores?.overall ?? 0,
           "Assessment Report": report || "",
+          "Pain Point": freeform?.painPoint || "",
+          "Growth Blocker": freeform?.growthBlocker || "",
+          "Top Priority": freeform?.priority || "",
           "Submitted At": new Date().toISOString()
         },
         typecast: true
