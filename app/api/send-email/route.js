@@ -162,7 +162,7 @@ function buildEmailHtml({ company, industry, size, role, results, freeform }) {
   <tr><td style="background:#1a1208;padding:32px;text-align:center">
     <div style="font-family:Georgia,'Times New Roman',serif;font-size:20px;color:#f0ead8;margin-bottom:8px;font-weight:normal">Let's build this together</div>
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;color:#7a8898;line-height:1.75;margin-bottom:22px;max-width:420px;margin-left:auto;margin-right:auto">Book a free 20-minute strategy call to review your top recommendations and identify the one change that will have the biggest impact on your business this month.</div>
-    <a href="https://hashdigital.io/book" style="display:inline-block;background:#e8a020;color:#08090f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;font-size:13px;font-weight:700;padding:13px 26px;text-decoration:none;letter-spacing:.5px">Book Free Strategy Call →</a>
+    <a href="https://calendly.com/ctakeuchi" style="display:inline-block;background:#e8a020;color:#08090f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;font-size:13px;font-weight:700;padding:13px 26px;text-decoration:none;letter-spacing:.5px">Book Free Strategy Call →</a>
   </td></tr>
 
   <!-- Footer -->

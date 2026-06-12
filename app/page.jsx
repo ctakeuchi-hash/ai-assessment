@@ -1012,7 +1012,7 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
                   <div className="cta-title">Let's build this together</div>
                   <p className="cta-desc">Book a free 20-minute strategy call to review your top recommendations and identify the one change that will have the biggest impact on your business this month.</p>
                   <div className="cta-btns">
-                    <button className="btn-p">Book Free Strategy Call →</button>
+                    <a href="https://calendly.com/ctakeuchi" target="_blank" rel="noopener noreferrer" className="btn-p" style={{textDecoration:"none"}}>Book Free Strategy Call →</a>
                     <button className="btn-s" onClick={()=>{setStep("intro");setAns({ai:{},ops:{},growth:{},deep:{}});setTrack(0);setResults(null);setBiz({company:"",industry:"",size:"",role:"",email:""});setFreeform({painPoint:"",growthBlocker:"",priority:""});setOpenPh({0:true,1:false,2:false,3:false})}}>Start Over</button>
                   </div>
                 </div>
