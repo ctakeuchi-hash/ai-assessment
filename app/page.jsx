@@ -2,7 +2,7 @@
 
 import { useState, useLayoutEffect } from "react";
 
-const VERSION = "1.5";
+const VERSION = "1.6";
 
 /* ── FONTS ── */
 const GFONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,400&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');`;
@@ -618,17 +618,7 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
       setResults({aiS,opsS,grS,total,aiM,opsM,grM,...parsed});
       setStep("results");
 
-      /* save lead + send email (fire-and-forget) */
-      fetch("/api/save-lead",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          email:biz.email, company:biz.company, industry:biz.industry,
-          size:biz.size, role:biz.role,
-          scores:{ai:aiS, ops:opsS, growth:grS, overall:total},
-          report: parsed.summary || ""
-        })
-      }).catch(()=>{});
+      /* send prospect email (fire-and-forget) */
       fetch("/api/send-email",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
@@ -639,6 +629,41 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
           freeform
         })
       }).catch(()=>{});
+
+      /* save lead + pre-call research email (fire-and-forget, chained) */
+      ;(async()=>{
+        try {
+          const slRes = await fetch("/api/save-lead",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({
+              email:biz.email, company:biz.company, industry:biz.industry,
+              size:biz.size, role:biz.role,
+              scores:{ai:aiS, ops:opsS, growth:grS, overall:total},
+              report: parsed.summary || ""
+            })
+          });
+          const slData = slRes.ok ? await slRes.json() : {};
+          fetch("/api/pre-call-research",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({
+              email:biz.email, company:biz.company, industry:biz.industry,
+              size:biz.size, role:biz.role,
+              scores:{ai:aiS, ops:opsS, growth:grS, overall:total},
+              maturity:{ai:aiM.label, ops:opsM.label, growth:grM.label},
+              answers:{
+                ai:     CORE[0].questions.map((q,i)=>({q:q.text, a:q.opts[ans.ai[i]??0]})),
+                ops:    CORE[1].questions.map((q,i)=>({q:q.text, a:q.opts[ans.ops[i]??0]})),
+                growth: CORE[2].questions.map((q,i)=>({q:q.text, a:q.opts[ans.growth[i]??0]})),
+                deep:   deepData.questions.map((q,i)=>({q:q.text, a:q.opts[ans.deep[i]??0]}))
+              },
+              freeform,
+              airtableRecordId: slData.id ?? null
+            })
+          }).catch(()=>{});
+        } catch(e) {}
+      })();
     } catch(e) {
       const msg = e.message || "Unknown error";
       console.error("Report generation error:", msg);
