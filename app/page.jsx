@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useLayoutEffect } from "react";
 
 const VERSION = "1.3";
 
@@ -472,11 +472,19 @@ export default function App() {
   const [errDetail, setErrDetail] = useState("");
   const [openPh, setOpenPh] = useState({0:true,1:false,2:false,3:false});
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
   }, [step, track]);
+
+  const scrollTop = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
+  const goStep = (s) => { scrollTop(); setStep(s); };
+  const goTrack = (fn) => { scrollTop(); setTrack(fn); };
 
   const tracks = ["ai","ops","growth"];
   const curTrack = CORE[track];
@@ -657,7 +665,10 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
 
           {/* NAV */}
           <div className="nav">
-            <div className="brand">Business Assessment<br/><span style={{fontSize:".55rem",opacity:.5,letterSpacing:".1em"}}>v{VERSION}</span></div>
+            <div className="brand">
+              <div>Business Assessment</div>
+              <div style={{fontSize:".55rem",opacity:.5,letterSpacing:".1em",marginTop:".1rem"}}>v{VERSION}</div>
+            </div>
             {step!=="intro"&&step!=="results"&&step!=="loading"&&(
               <div className="nav-right">
                 {step==="bizinfo"?"Your Business":
@@ -695,7 +706,7 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
                   </div>
                 ))}
               </div>
-              <button className="btn-next" onClick={()=>setStep("bizinfo")}>Begin Assessment →</button>
+              <button className="btn-next" onClick={()=>goStep("bizinfo")}>Begin Assessment →</button>
             </div>
           )}
 
@@ -733,8 +744,8 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
                 </select>
               </div>
               <div className="nav-row">
-                <button className="btn-back" onClick={()=>setStep("intro")}>← Back</button>
-                <button className="btn-next" disabled={!biz.industry||!biz.size||!biz.role} onClick={()=>setStep("track")}>Continue →</button>
+                <button className="btn-back" onClick={()=>goStep("intro")}>← Back</button>
+                <button className="btn-next" disabled={!biz.industry||!biz.size||!biz.role} onClick={()=>goStep("track")}>Continue →</button>
               </div>
             </div>
           )}
@@ -760,8 +771,8 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
                 </div>
               ))}
               <div className="nav-row">
-                <button className="btn-back" onClick={()=>track===0?setStep("bizinfo"):setTrack(t=>t-1)}>← Back</button>
-                <button className="btn-next" disabled={!allDone(curKey)} onClick={()=>track<2?setTrack(t=>t+1):setStep("deep")}>
+                <button className="btn-back" onClick={()=>track===0?goStep("bizinfo"):goTrack(t=>t-1)}>← Back</button>
+                <button className="btn-next" disabled={!allDone(curKey)} onClick={()=>track<2?goTrack(t=>t+1):goStep("deep")}>
                   {track<2?"Next Track →":"Industry Questions →"}
                 </button>
               </div>
@@ -793,8 +804,8 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
                 </div>
               ))}
               <div className="nav-row">
-                <button className="btn-back" onClick={()=>{setTrack(2);setStep("track")}}>← Back</button>
-                <button className="btn-next" disabled={!allDone("deep")} onClick={()=>setStep("email")}>Get My Report →</button>
+                <button className="btn-back" onClick={()=>{scrollTop();setTrack(2);setStep("track")}}>← Back</button>
+                <button className="btn-next" disabled={!allDone("deep")} onClick={()=>goStep("email")}>Get My Report →</button>
               </div>
             </div>
           )}
@@ -818,7 +829,7 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
                 </div>}
               </div>
               <div className="nav-row">
-                <button className="btn-back" onClick={()=>setStep("deep")}>← Back</button>
+                <button className="btn-back" onClick={()=>goStep("deep")}>← Back</button>
                 <button className="btn-next" disabled={!biz.email||loading} onClick={generate}>Generate Report →</button>
               </div>
             </div>
