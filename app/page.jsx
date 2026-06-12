@@ -24,7 +24,8 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font
 
 /* NAV */
 .nav{padding:2rem 0 2.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);margin-bottom:3rem}
-.brand{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);opacity:.7}
+.brand{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+.brand-v{font-size:.58rem;color:var(--muted);letter-spacing:.08em;text-transform:none;margin-top:.15rem;opacity:1}
 .nav-right{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em}
 
 /* PROGRESS */
@@ -667,7 +668,7 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
           <div className="nav">
             <div className="brand">
               <div>Business Assessment</div>
-              <div style={{fontSize:".55rem",opacity:.5,letterSpacing:".1em",marginTop:".1rem"}}>v{VERSION}</div>
+              <div className="brand-v">v{VERSION}</div>
             </div>
             {step!=="intro"&&step!=="results"&&step!=="loading"&&(
               <div className="nav-right">
