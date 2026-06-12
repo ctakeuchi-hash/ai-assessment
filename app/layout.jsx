@@ -1,3 +1,5 @@
+import './globals.css'
+
 export const metadata = { title: 'AI Business Assessment' }
 export default function RootLayout({ children }) {
   return (

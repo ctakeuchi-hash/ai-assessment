@@ -774,6 +774,7 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
           <div className="tab-bar">
             <button className={`tab-btn${activeTab==="assessment"?" tab-active":""}`} onClick={()=>setActiveTab("assessment")}>Assessment</button>
             <button className={`tab-btn${activeTab==="dashboard"?" tab-active":""}`} onClick={()=>setActiveTab("dashboard")}>Dashboard</button>
+            <a href="/copilot" className="tab-btn" style={{textDecoration:"none"}}>Call Copilot</a>
           </div>
 
           {/* PROGRESS */}
