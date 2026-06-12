@@ -2,7 +2,7 @@
 
 import { useState, useLayoutEffect } from "react";
 
-const VERSION = "1.4";
+const VERSION = "1.5";
 
 /* ── FONTS ── */
 const GFONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,400&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');`;
@@ -56,6 +56,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font
 .finput,.fselect{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Outfit',sans-serif;font-size:.92rem;padding:.8rem 1rem;outline:none;transition:border-color .2s;-webkit-appearance:none}
 .finput:focus,.fselect:focus{border-color:var(--gold)}
 .fselect option{background:var(--surface)}
+textarea.finput{min-height:76px;resize:vertical;line-height:1.55;padding-top:.85rem}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
 
 /* SECTION */
@@ -472,6 +473,7 @@ export default function App() {
   const [err, setErr] = useState("");
   const [errDetail, setErrDetail] = useState("");
   const [openPh, setOpenPh] = useState({0:true,1:false,2:false,3:false});
+  const [freeform, setFreeform] = useState({painPoint:"",growthBlocker:"",priority:""});
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -537,6 +539,11 @@ ${deepQs}
 
 INDUSTRY FOCUS:
 ${indCtx}
+${(freeform.painPoint||freeform.growthBlocker||freeform.priority)?`
+OPEN-ENDED ANSWERS — quote these directly in your recommendations where relevant:
+${freeform.painPoint?`• Biggest pain point / time sink: "${freeform.painPoint}"`:""}
+${freeform.growthBlocker?`• Holding back growth: "${freeform.growthBlocker}"`:""}
+${freeform.priority?`• Top priority this month: "${freeform.priority}"`:""}`:""}
 
 CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every field must be SHORT and punchy — no long sentences.
 
@@ -628,7 +635,8 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
         body:JSON.stringify({
           to:biz.email, company:biz.company, industry:biz.industry,
           size:biz.size, role:biz.role,
-          results:{aiS,opsS,grS,total,aiM,opsM,grM,...parsed}
+          results:{aiS,opsS,grS,total,aiM,opsM,grM,...parsed},
+          freeform
         })
       }).catch(()=>{});
     } catch(e) {
@@ -813,6 +821,22 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
               <div className="sec-kicker k-gold">Final Step</div>
               <h2 className="sec-title">Where should we send your report?</h2>
               <p className="sec-desc">Your personalized report will be generated and emailed to you.</p>
+              <div className="email-card" style={{borderTop:"2px solid var(--gold)",marginBottom:"1rem"}}>
+                <div className="email-title">Help us sharpen your report</div>
+                <p className="email-desc" style={{marginBottom:"1.5rem"}}>Optional — but the more you share, the more specific your recommendations.</p>
+                <div className="fgroup">
+                  <label className="flabel">Biggest pain point, time sink, or manual effort <span style={{color:"var(--dim)",fontWeight:400}}>· optional</span></label>
+                  <textarea className="finput" placeholder="e.g. We manually send the same follow-up email to every new inquiry..." value={freeform.painPoint} onChange={e=>setFreeform(p=>({...p,painPoint:e.target.value}))}/>
+                </div>
+                <div className="fgroup">
+                  <label className="flabel">What's holding back your growth? <span style={{color:"var(--dim)",fontWeight:400}}>· optional</span></label>
+                  <textarea className="finput" placeholder="e.g. We have no system to follow up with leads who don't convert right away..." value={freeform.growthBlocker} onChange={e=>setFreeform(p=>({...p,growthBlocker:e.target.value}))}/>
+                </div>
+                <div className="fgroup" style={{marginBottom:0}}>
+                  <label className="flabel">If you could fix one thing this month, what would it be? <span style={{color:"var(--dim)",fontWeight:400}}>· optional</span></label>
+                  <textarea className="finput" placeholder="e.g. Getting our customer onboarding to happen without anyone touching it..." value={freeform.priority} onChange={e=>setFreeform(p=>({...p,priority:e.target.value}))}/>
+                </div>
+              </div>
               <div className="email-card">
                 <div className="email-title">Your personalized report is ready to generate</div>
                 <p className="email-desc">Based on your answers and industry, we'll identify your specific gaps, blind spots, and a sequenced roadmap — written for your type of business.</p>
@@ -993,7 +1017,7 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
                   <p className="cta-desc">Book a free 20-minute strategy call to review your top recommendations and identify the one change that will have the biggest impact on your business this month.</p>
                   <div className="cta-btns">
                     <button className="btn-p">Book Free Strategy Call →</button>
-                    <button className="btn-s" onClick={()=>{setStep("intro");setAns({ai:{},ops:{},growth:{},deep:{}});setTrack(0);setResults(null);setBiz({company:"",industry:"",size:"",role:"",email:""});setOpenPh({0:true,1:false,2:false,3:false})}}>Start Over</button>
+                    <button className="btn-s" onClick={()=>{setStep("intro");setAns({ai:{},ops:{},growth:{},deep:{}});setTrack(0);setResults(null);setBiz({company:"",industry:"",size:"",role:"",email:""});setFreeform({painPoint:"",growthBlocker:"",priority:""});setOpenPh({0:true,1:false,2:false,3:false})}}>Start Over</button>
                   </div>
                 </div>
 

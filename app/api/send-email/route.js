@@ -18,7 +18,7 @@ function boldToHtml(s) {
   return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 }
 
-function buildEmailHtml({ company, industry, size, role, results }) {
+function buildEmailHtml({ company, industry, size, role, results, freeform }) {
   const { total, aiS, opsS, grS, aiM, opsM, grM, summary, blindSpots, quickWins, recommendations } = results || {};
 
   const overallMat = maturityLabel(total, 36);
@@ -148,6 +148,16 @@ function buildEmailHtml({ company, industry, size, role, results }) {
     ${recsHtml}
   </td></tr>
 
+  ${(freeform?.painPoint || freeform?.growthBlocker || freeform?.priority) ? `
+  <!-- In Their Own Words -->
+  <tr><td style="background:#fff8ee;padding:24px 32px;border-top:1px solid #e8dcc8">
+    <div style="font-family:monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#b07010;margin-bottom:4px">IN THEIR OWN WORDS</div>
+    <div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;color:#1a1208;margin-bottom:16px;font-weight:normal">Context they provided</div>
+    ${freeform?.painPoint ? `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:10px"><tr><td style="padding:10px 14px;background:#fffcf5;border-left:3px solid #e8a020"><div style="font-family:monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#b07010;margin-bottom:4px">Biggest pain point / time sink</div><div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;font-size:13px;color:#333;line-height:1.6;font-style:italic">"${esc(freeform.painPoint)}"</div></td></tr></table>` : ''}
+    ${freeform?.growthBlocker ? `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:10px"><tr><td style="padding:10px 14px;background:#fffcf5;border-left:3px solid #e8a020"><div style="font-family:monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#b07010;margin-bottom:4px">Holding back growth</div><div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;font-size:13px;color:#333;line-height:1.6;font-style:italic">"${esc(freeform.growthBlocker)}"</div></td></tr></table>` : ''}
+    ${freeform?.priority ? `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0"><tr><td style="padding:10px 14px;background:#fffcf5;border-left:3px solid #e8a020"><div style="font-family:monospace,monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#b07010;margin-bottom:4px">Top priority this month</div><div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;font-size:13px;color:#333;line-height:1.6;font-style:italic">"${esc(freeform.priority)}"</div></td></tr></table>` : ''}
+  </td></tr>` : ''}
+
   <!-- CTA -->
   <tr><td style="background:#1a1208;padding:32px;text-align:center">
     <div style="font-family:Georgia,'Times New Roman',serif;font-size:20px;color:#f0ead8;margin-bottom:8px;font-weight:normal">Let's build this together</div>
@@ -174,7 +184,7 @@ function buildEmailHtml({ company, industry, size, role, results }) {
 }
 
 export async function POST(req) {
-  const { to, company, industry, size, role, results } = await req.json()
+  const { to, company, industry, size, role, results, freeform } = await req.json()
 
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
@@ -183,7 +193,7 @@ export async function POST(req) {
   }
 
   const from = process.env.FROM_EMAIL || "onboarding@resend.dev"
-  const html = buildEmailHtml({ company, industry, size, role, results })
+  const html = buildEmailHtml({ company, industry, size, role, results, freeform })
 
   try {
     const res = await fetch("https://api.resend.com/emails", {
