@@ -97,7 +97,9 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font
 .email-card{background:var(--surface);border:1px solid var(--border);padding:2rem;margin-bottom:1.5rem}
 .email-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:#f0ead8;margin-bottom:.5rem}
 .email-desc{font-size:.83rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.65}
-.err{background:#1a0808;border:1px solid #4a1818;color:#f08080;font-size:.78rem;padding:.65rem .9rem;margin-top:.75rem}
+.err{background:#1a0808;border:1px solid #4a1818;color:#f08080;font-size:.78rem;padding:.75rem .9rem;margin-top:.75rem;line-height:1.6;word-break:break-word}
+.err-label{font-weight:600;margin-bottom:.2rem}
+.err-detail{opacity:.7;font-size:.72rem;margin-top:.3rem;font-family:'DM Mono',monospace}
 
 /* LOADING */
 .loading{text-align:center;padding:5rem 1.5rem}
@@ -467,6 +469,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [loadStep, setLoadStep] = useState(0);
   const [err, setErr] = useState("");
+  const [errDetail, setErrDetail] = useState("");
   const [openPh, setOpenPh] = useState({0:true,1:false,2:false,3:false});
 
   useEffect(() => {
@@ -624,9 +627,22 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
         })
       }).catch(()=>{});
     } catch(e) {
-      console.error("Report generation error:", e);
-      setErr(e.message || "Something went wrong generating your report. Please try again.");
+      const msg = e.message || "Unknown error";
+      console.error("Report generation error:", msg);
+      setErr("Something went wrong generating your report. Please try again.");
+      setErrDetail(msg);
       setStep("email");
+      fetch("/api/log-error", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          error: msg,
+          context: "report-generation",
+          email: biz.email,
+          company: biz.company,
+          industry: biz.industry
+        })
+      }).catch(()=>{});
     } finally { setLoading(false); }
   };
 
@@ -796,7 +812,10 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
                   <label className="flabel">Business Email</label>
                   <input className="finput" type="email" placeholder="you@company.com" value={biz.email} onChange={e=>setBiz(p=>({...p,email:e.target.value}))}/>
                 </div>
-                {err&&<div className="err">{err}</div>}
+                {err&&<div className="err">
+                  <div className="err-label">{err}</div>
+                  {errDetail&&<div className="err-detail">{errDetail}</div>}
+                </div>}
               </div>
               <div className="nav-row">
                 <button className="btn-back" onClick={()=>setStep("deep")}>← Back</button>
