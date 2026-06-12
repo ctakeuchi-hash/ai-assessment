@@ -153,7 +153,7 @@ export default function DragonScaleBuild() {
         </a>
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
           <a href="https://ai-assessment-lake.vercel.app" className="dm" style={{ fontSize: 13, color: "#a09880", textDecoration: "none" }}>Free Assessment</a>
-          <a href="https://calendly.com/chris-takeuchi" className="btn-gold" style={{ padding: "10px 22px", fontSize: 13 }}>Book Scoping Call</a>
+          <a href="https://calendly.com/ctakeuchi" className="btn-gold" style={{ padding: "10px 22px", fontSize: 13 }}>Book Scoping Call</a>
         </div>
       </nav>
 
@@ -184,7 +184,7 @@ export default function DragonScaleBuild() {
           </p>
 
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <a href="https://calendly.com/chris-takeuchi" className="btn-gold">Book Free Scoping Call →</a>
+            <a href="https://calendly.com/ctakeuchi" className="btn-gold">Book Free Scoping Call →</a>
             <a href="https://ai-assessment-lake.vercel.app" className="btn-outline">Take the Assessment First</a>
           </div>
 
@@ -285,7 +285,7 @@ export default function DragonScaleBuild() {
 
                 <div className="dm" style={{ fontSize: 11, color: "#4a4440", marginBottom: 24, letterSpacing: "0.05em" }}>{t.scopeNote}</div>
 
-                <a href="https://calendly.com/chris-takeuchi" className="btn-gold" style={{ background: t.featured ? "#a855f7" : "#c8a96e", textAlign: "center", color: t.featured ? "#fff" : "#0a0a0f" }}>
+                <a href="https://calendly.com/ctakeuchi" className="btn-gold" style={{ background: t.featured ? "#a855f7" : "#c8a96e", textAlign: "center", color: t.featured ? "#fff" : "#0a0a0f" }}>
                   Book Scoping Call →
                 </a>
               </div>
@@ -346,7 +346,7 @@ export default function DragonScaleBuild() {
             No pitch. No pressure. A fixed-scope proposal within 24 hours if it's a fit.
           </p>
           <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="https://calendly.com/chris-takeuchi" className="btn-gold" style={{ fontSize: 16, padding: "16px 40px" }}>Book Scoping Call →</a>
+            <a href="https://calendly.com/ctakeuchi" className="btn-gold" style={{ fontSize: 16, padding: "16px 40px" }}>Book Scoping Call →</a>
             <a href="https://ai-assessment-lake.vercel.app" className="btn-outline" style={{ fontSize: 16, padding: "16px 40px" }}>Take Free Assessment</a>
           </div>
           <div className="dm" style={{ marginTop: 20, fontSize: 12, color: "#4a4440" }}>
