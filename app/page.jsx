@@ -2,7 +2,7 @@
 
 import { useState, useLayoutEffect } from "react";
 
-const VERSION = "1.5";
+const VERSION = "1.6";
 
 /* ── FONTS ── */
 const GFONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,400&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');`;
@@ -474,6 +474,10 @@ export default function App() {
   const [errDetail, setErrDetail] = useState("");
   const [openPh, setOpenPh] = useState({0:true,1:false,2:false,3:false});
   const [freeform, setFreeform] = useState({painPoint:"",growthBlocker:"",priority:""});
+  const [customIndustry, setCustomIndustry] = useState("");
+  const [customRole, setCustomRole] = useState("");
+  const [generatedQuestions, setGeneratedQuestions] = useState(null);
+  const [generatingQs, setGeneratingQs] = useState(false);
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -492,7 +496,10 @@ export default function App() {
   const tracks = ["ai","ops","growth"];
   const curTrack = CORE[track];
   const curKey = tracks[track];
-  const deepData = DEEP[biz.industry] || DEEP["Other"];
+  const effectiveIndustry = biz.industry === "Other" && customIndustry ? customIndustry : biz.industry;
+  const deepData = biz.industry === "Other" && generatedQuestions
+    ? { label: `${customIndustry || "Your Industry"} Operations`, questions: generatedQuestions }
+    : (DEEP[biz.industry] || DEEP["Other"]);
 
   const score = id => Object.values(ans[id]).reduce((s,v)=>s+v,0);
   const allDone = id => {
@@ -519,13 +526,16 @@ export default function App() {
       await new Promise(r=>setTimeout(r,900));
     }
 
-    const indCtx = IND_CONTEXT[biz.industry] || IND_CONTEXT["Other"];
+    const indCtx = biz.industry === "Other" && customIndustry
+      ? `${IND_CONTEXT["Other"]} The business operates in the ${customIndustry} industry — tailor all recommendations specifically to that context.`
+      : (IND_CONTEXT[biz.industry] || IND_CONTEXT["Other"]);
     const deepQs = deepData.questions.map((q,i)=>`Q: ${q.text}\nA: ${q.opts[ans.deep[i]??0]}`).join("\n");
+    const displayRole = biz.role === "Other" && customRole ? customRole : biz.role;
     const coreQs = CORE.map(t=>t.questions.map((q,i)=>`Q: ${q.text}\nA: ${q.opts[ans[t.id][i]??0]}`).join("\n")).join("\n");
 
     const prompt = `You are a senior business operations consultant writing a concise, punchy assessment report. Be direct. No padding. Outcome-focused. RULES: No software/tool/vendor names. No "AI", "artificial intelligence", or "machine learning" — use "intelligent automation", "automated workflow", "smart notification", "automated messaging", "automated content system" instead.
 
-Business: ${biz.company||"the business"} | Industry: ${biz.industry} | Size: ${biz.size} | Role: ${biz.role}
+Business: ${biz.company||"the business"} | Industry: ${effectiveIndustry} | Size: ${biz.size} | Role: ${displayRole}
 
 SCORES (each out of 12):
 - Readiness: ${aiS}/12 (${aiM.label}) | Operations: ${opsS}/12 (${opsM.label}) | Growth: ${grS}/12 (${grM.label})
@@ -618,19 +628,21 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({
-          email:biz.email, company:biz.company, industry:biz.industry,
-          size:biz.size, role:biz.role,
+          email:biz.email, company:biz.company,
+          industry: effectiveIndustry,
+          size:biz.size, role: displayRole,
           scores:{ai:aiS, ops:opsS, growth:grS, overall:total},
           report: parsed.summary || "",
-          freeform
+          freeform,
+          generatedQuestions: generatedQuestions || null
         })
       }).catch(()=>{});
       fetch("/api/send-email",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({
-          to:biz.email, company:biz.company, industry:biz.industry,
-          size:biz.size, role:biz.role,
+          to:biz.email, company:biz.company, industry:effectiveIndustry,
+          size:biz.size, role:displayRole,
           results:{aiS,opsS,grS,total,aiM,opsM,grM,...parsed},
           freeform
         })
@@ -724,10 +736,13 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
               <div className="fgrid">
                 <div className="fgroup">
                   <label className="flabel">Industry</label>
-                  <select className="fselect" value={biz.industry} onChange={e=>setBiz(p=>({...p,industry:e.target.value}))}>
+                  <select className="fselect" value={biz.industry} onChange={e=>{setBiz(p=>({...p,industry:e.target.value}));setCustomIndustry("");setGeneratedQuestions(null);}}>
                     <option value="">Select industry</option>
                     {INDUSTRIES.map(i=><option key={i} value={i}>{i}</option>)}
                   </select>
+                  {biz.industry==="Other"&&(
+                    <input className="finput" style={{marginTop:"0.5rem"}} placeholder="e.g. Veterinary Clinic, Law Firm, Staffing Agency…" value={customIndustry} onChange={e=>setCustomIndustry(e.target.value)}/>
+                  )}
                 </div>
                 <div className="fgroup">
                   <label className="flabel">Company Size</label>
@@ -739,14 +754,27 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
               </div>
               <div className="fgroup">
                 <label className="flabel">Your Role</label>
-                <select className="fselect" value={biz.role} onChange={e=>setBiz(p=>({...p,role:e.target.value}))}>
+                <select className="fselect" value={biz.role} onChange={e=>{setBiz(p=>({...p,role:e.target.value}));setCustomRole("");}}>
                   <option value="">Select role</option>
                   {ROLES.map(r=><option key={r} value={r}>{r}</option>)}
                 </select>
+                {biz.role==="Other"&&(
+                  <input className="finput" style={{marginTop:"0.5rem"}} placeholder="e.g. Marketing Director, IT Manager, Office Manager…" value={customRole} onChange={e=>setCustomRole(e.target.value)}/>
+                )}
               </div>
               <div className="nav-row">
                 <button className="btn-back" onClick={()=>goStep("intro")}>← Back</button>
-                <button className="btn-next" disabled={!biz.industry||!biz.size||!biz.role} onClick={()=>goStep("track")}>Continue →</button>
+                <button className="btn-next"
+                  disabled={!biz.industry||!biz.size||!biz.role||(biz.industry==="Other"&&!customIndustry.trim())}
+                  onClick={()=>{
+                    if(biz.industry==="Other"&&customIndustry.trim()&&!generatedQuestions){
+                      setGeneratingQs(true);
+                      fetch("/api/generate-questions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({industry:customIndustry.trim()})})
+                        .then(r=>r.json()).then(d=>{if(d.questions)setGeneratedQuestions(d.questions);})
+                        .catch(()=>{}).finally(()=>setGeneratingQs(false));
+                    }
+                    goStep("track");
+                  }}>Continue →</button>
               </div>
             </div>
           )}
@@ -786,9 +814,10 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
               <div className="sec-kicker k-ind">Industry Deep Dive</div>
               <div className="ind-badge">
                 <div className="ind-badge-dot"/>
-                <div className="ind-badge-txt">{biz.industry}</div>
+                <div className="ind-badge-txt">{effectiveIndustry}</div>
               </div>
               <h2 className="sec-title">{deepData.label}</h2>
+              {generatingQs&&<p style={{color:"var(--dim)",fontSize:"0.85rem",marginBottom:"1rem"}}>Generating your questions…</p>}
               <p className="sec-desc">These questions are specific to your industry and shape your personalized recommendations.</p>
               {deepData.questions.map((q,qi)=>(
                 <div key={qi} className="qblock">
@@ -1013,7 +1042,7 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
                   <p className="cta-desc">Book a free 20-minute strategy call to review your top recommendations and identify the one change that will have the biggest impact on your business this month.</p>
                   <div className="cta-btns">
                     <a href="https://calendly.com/ctakeuchi" target="_blank" rel="noopener noreferrer" className="btn-p" style={{textDecoration:"none"}}>Book Free Strategy Call →</a>
-                    <button className="btn-s" onClick={()=>{setStep("intro");setAns({ai:{},ops:{},growth:{},deep:{}});setTrack(0);setResults(null);setBiz({company:"",industry:"",size:"",role:"",email:""});setFreeform({painPoint:"",growthBlocker:"",priority:""});setOpenPh({0:true,1:false,2:false,3:false})}}>Start Over</button>
+                    <button className="btn-s" onClick={()=>{setStep("intro");setAns({ai:{},ops:{},growth:{},deep:{}});setTrack(0);setResults(null);setBiz({company:"",industry:"",size:"",role:"",email:""});setFreeform({painPoint:"",growthBlocker:"",priority:""});setCustomIndustry("");setCustomRole("");setGeneratedQuestions(null);setGeneratingQs(false);setOpenPh({0:true,1:false,2:false,3:false})}}>Start Over</button>
                   </div>
                 </div>
 

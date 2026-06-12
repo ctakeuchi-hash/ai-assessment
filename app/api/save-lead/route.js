@@ -1,5 +1,5 @@
 export async function POST(req) {
-  const { email, company, industry, size, role, scores, report, freeform } = await req.json()
+  const { email, company, industry, size, role, scores, report, freeform, generatedQuestions } = await req.json()
 
   const pat = process.env.AIRTABLE_PAT
   const baseId = process.env.AIRTABLE_BASE_ID
@@ -31,6 +31,7 @@ export async function POST(req) {
           "Pain Point": freeform?.painPoint || "",
           "Growth Blocker": freeform?.growthBlocker || "",
           "Top Priority": freeform?.priority || "",
+          "Custom Questions": generatedQuestions ? JSON.stringify(generatedQuestions) : "",
           "Submitted At": new Date().toISOString()
         },
         typecast: true
