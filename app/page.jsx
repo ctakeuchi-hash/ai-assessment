@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useLayoutEffect } from "react";
+import { useState, useLayoutEffect, useEffect } from "react";
 
-const VERSION = "1.6";
+const VERSION = "1.7";
 
 /* ── FONTS ── */
 const GFONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,400&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');`;
@@ -227,6 +227,60 @@ textarea.finput{min-height:76px;resize:vertical;line-height:1.55;padding-top:.85
   .rm-cols-hdr,.rm-row{grid-template-columns:1fr 80px 80px}
   .rm-cols-hdr>:last-child,.rm-row>:last-child{display:none}
   .cta-btns{flex-direction:column}
+}
+
+/* TAB BAR */
+.tab-bar{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:3rem;margin-top:-.5rem}
+.tab-btn{padding:.55rem 1.3rem;font-family:'DM Mono',monospace;font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;margin-bottom:-1px}
+.tab-btn.tab-active{color:var(--gold);border-bottom-color:var(--gold)}
+.tab-btn:hover:not(.tab-active){color:var(--text)}
+
+/* DASHBOARD */
+.db-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:2rem}
+.db-title{font-family:'Cormorant Garamond',serif;font-size:1.9rem;color:#f0ead8}
+.db-refresh{font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);background:transparent;border:1px solid var(--border);padding:.4rem .9rem;cursor:pointer;transition:all .2s}
+.db-refresh:hover{color:var(--text);border-color:var(--border2)}
+.db-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.875rem;margin-bottom:2rem}
+.db-stat{background:var(--surface);border:1px solid var(--border);padding:1.25rem}
+.db-stat-n{font-family:'Cormorant Garamond',serif;font-size:2.4rem;color:var(--gold);line-height:1}
+.db-stat-lbl{font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:.3rem}
+.db-mat-row{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem}
+.db-filter{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.5rem}
+.db-filter-btn{font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.3rem .8rem;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .2s}
+.db-filter-btn.active{background:var(--surface);color:var(--gold);border-color:var(--gold)}
+.db-filter-btn:hover:not(.active){color:var(--text);border-color:var(--border2)}
+.db-lead{background:var(--surface);border:1px solid var(--border);margin-bottom:.6rem;cursor:pointer;transition:border-color .15s}
+.db-lead:hover{border-color:var(--border2)}
+.db-lead-row{display:grid;grid-template-columns:1fr auto auto;gap:1.25rem;align-items:center;padding:1.1rem 1.25rem}
+.db-company{font-size:.9rem;font-weight:600;color:#b8ccdc;margin-bottom:.3rem}
+.db-chips{display:flex;gap:.4rem;flex-wrap:wrap}
+.db-chip{font-family:'DM Mono',monospace;font-size:.54rem;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);background:#0a0c14;border:1px solid var(--border);padding:.15rem .5rem}
+.db-score-col{text-align:right}
+.db-score-n{font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--gold);line-height:1}
+.db-score-of{font-family:'DM Mono',monospace;font-size:.54rem;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+.db-date{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--dim);white-space:nowrap}
+.db-expand{border-top:1px solid var(--border);padding:1.1rem 1.25rem;background:#0a0c14}
+.db-expand-summary{font-size:.82rem;color:#6a8098;line-height:1.65}
+.db-expand-summary strong{color:#a8c0d0}
+.db-track-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-top:.875rem}
+.db-track{background:var(--surface);border:1px solid var(--border);border-top:2px solid;padding:.75rem 1rem}
+.db-track:nth-child(1){border-top-color:var(--gold)}
+.db-track:nth-child(2){border-top-color:var(--blue)}
+.db-track:nth-child(3){border-top-color:var(--teal)}
+.db-track-name{font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.2rem}
+.db-track-n{font-family:'Cormorant Garamond',serif;font-size:1.4rem;line-height:1}
+.db-track:nth-child(1) .db-track-n{color:var(--gold)}
+.db-track:nth-child(2) .db-track-n{color:var(--blue)}
+.db-track:nth-child(3) .db-track-n{color:var(--teal)}
+.db-empty{text-align:center;padding:4rem 1.5rem;color:var(--muted)}
+.db-empty-title{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:#f0ead8;margin-bottom:.5rem}
+.db-empty-sub{font-size:.83rem;line-height:1.65}
+.db-loading{text-align:center;padding:3rem;color:var(--muted);font-family:'DM Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em}
+@media(max-width:580px){
+  .db-stats{grid-template-columns:1fr 1fr}
+  .db-lead-row{grid-template-columns:1fr auto}
+  .db-date{display:none}
+  .db-track-row{grid-template-columns:1fr}
 }
 `;
 
@@ -478,6 +532,30 @@ export default function App() {
   const [customRole, setCustomRole] = useState("");
   const [generatedQuestions, setGeneratedQuestions] = useState(null);
   const [generatingQs, setGeneratingQs] = useState(false);
+  const [activeTab, setActiveTab] = useState("assessment");
+  const [leads, setLeads] = useState(null);
+  const [leadsLoading, setLeadsLoading] = useState(false);
+  const [leadsFilter, setLeadsFilter] = useState("all");
+  const [expandedLead, setExpandedLead] = useState(null);
+
+  const fetchLeads = async () => {
+    setLeadsLoading(true);
+    try {
+      const res = await fetch("/api/leads");
+      const data = await res.json();
+      setLeads(data.leads || []);
+    } catch {
+      setLeads([]);
+    } finally {
+      setLeadsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "dashboard" && leads === null) {
+      fetchLeads();
+    }
+  }, [activeTab]);
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -682,7 +760,7 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
               <div>Business Assessment</div>
               <div className="brand-v">v{VERSION}</div>
             </div>
-            {step!=="intro"&&step!=="results"&&step!=="loading"&&(
+            {activeTab==="assessment"&&step!=="intro"&&step!=="results"&&step!=="loading"&&(
               <div className="nav-right">
                 {step==="bizinfo"?"Your Business":
                  step==="track"?`${curTrack.name} · Track ${track+1}/3`:
@@ -692,8 +770,14 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
             )}
           </div>
 
+          {/* TABS */}
+          <div className="tab-bar">
+            <button className={`tab-btn${activeTab==="assessment"?" tab-active":""}`} onClick={()=>setActiveTab("assessment")}>Assessment</button>
+            <button className={`tab-btn${activeTab==="dashboard"?" tab-active":""}`} onClick={()=>setActiveTab("dashboard")}>Dashboard</button>
+          </div>
+
           {/* PROGRESS */}
-          {step!=="intro"&&(
+          {activeTab==="assessment"&&step!=="intro"&&(
             <div className="prog-wrap">
               <div className="prog-track"><div className="prog-fill" style={{width:`${prog()}%`}}/></div>
               <div className="prog-dots">
@@ -703,6 +787,8 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
               </div>
             </div>
           )}
+
+          {activeTab==="assessment"&&(<>
 
           {/* ── INTRO ── */}
           {step==="intro"&&(
@@ -1050,6 +1136,106 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
                   <div className="r-footer-txt">Business Operations Report · Confidential</div>
                   <div className="r-footer-txt">{biz.company||"Your Business"} · {new Date().toLocaleDateString()}</div>
                 </div>
+              </div>
+            );
+          })()}
+
+          </>)}
+
+          {/* ── DASHBOARD ── */}
+          {activeTab==="dashboard"&&(()=>{
+            const matLabel = s => s>=0.78*36?"Advanced":s>=0.56*36?"Growing":s>=0.33*36?"Developing":"Beginner";
+            const matClsDb = s => s>=0.78*36?"mat-a":s>=0.56*36?"mat-g":s>=0.33*36?"mat-d":"mat-b";
+            const filtered = !leads ? [] : leadsFilter==="all" ? leads : leads.filter(l=>{
+              const lbl = l.overallScore!=null ? matLabel(l.overallScore) : "";
+              return lbl.toLowerCase()===leadsFilter;
+            });
+            const avgScore = leads&&leads.length ? Math.round(leads.reduce((s,l)=>s+(l.overallScore||0),0)/leads.length) : null;
+            const matCounts = leads ? leads.reduce((acc,l)=>{
+              if(l.overallScore!=null){const k=matLabel(l.overallScore).toLowerCase();acc[k]=(acc[k]||0)+1;}
+              return acc;
+            },{}) : {};
+            return (
+              <div>
+                <div className="db-header">
+                  <div className="db-title">Assessment Results</div>
+                  <button className="db-refresh" onClick={fetchLeads} disabled={leadsLoading}>{leadsLoading?"Loading…":"↻ Refresh"}</button>
+                </div>
+
+                {leadsLoading&&!leads&&<div className="db-loading">Loading assessments…</div>}
+
+                {leads&&(
+                  <>
+                    <div className="db-stats">
+                      <div className="db-stat">
+                        <div className="db-stat-n">{leads.length}</div>
+                        <div className="db-stat-lbl">Total Assessments</div>
+                      </div>
+                      <div className="db-stat">
+                        <div className="db-stat-n">{avgScore!=null?`${avgScore}/36`:"—"}</div>
+                        <div className="db-stat-lbl">Avg Score</div>
+                      </div>
+                      <div className="db-stat">
+                        <div className="db-stat-lbl" style={{marginBottom:".5rem"}}>By Maturity</div>
+                        <div className="db-mat-row">
+                          {["beginner","developing","growing","advanced"].map(k=>(
+                            matCounts[k]>0&&<span key={k} className={`mat mat-${k[0]}`}>{matCounts[k]} {k}</span>
+                          ))}
+                          {Object.keys(matCounts).length===0&&<span style={{fontSize:".75rem",color:"var(--dim)"}}>—</span>}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="db-filter">
+                      {["all","beginner","developing","growing","advanced"].map(f=>(
+                        <button key={f} className={`db-filter-btn${leadsFilter===f?" active":""}`} onClick={()=>setLeadsFilter(f)}>
+                          {f==="all"?`All (${leads.length})`:`${f} (${matCounts[f]||0})`}
+                        </button>
+                      ))}
+                    </div>
+
+                    {filtered.length===0&&(
+                      <div className="db-empty">
+                        <div className="db-empty-title">{leads.length===0?"No assessments yet":"No matches"}</div>
+                        <div className="db-empty-sub">{leads.length===0?"Completed assessments will appear here once submitted.":"Try a different filter."}</div>
+                      </div>
+                    )}
+
+                    {filtered.map(lead=>(
+                      <div key={lead.id} className="db-lead" onClick={()=>setExpandedLead(expandedLead===lead.id?null:lead.id)}>
+                        <div className="db-lead-row">
+                          <div>
+                            <div className="db-company">{lead.company||lead.email||"Unknown"}</div>
+                            <div className="db-chips">
+                              {lead.industry&&<span className="db-chip">{lead.industry}</span>}
+                              {lead.size&&<span className="db-chip">{lead.size}</span>}
+                              {lead.role&&<span className="db-chip">{lead.role}</span>}
+                              {lead.overallScore!=null&&<span className={`mat ${matClsDb(lead.overallScore)}`}>{matLabel(lead.overallScore)}</span>}
+                            </div>
+                          </div>
+                          <div className="db-score-col">
+                            <div className="db-score-n">{lead.overallScore!=null?lead.overallScore:"—"}</div>
+                            <div className="db-score-of">out of 36</div>
+                          </div>
+                          <div className="db-date">{lead.submittedAt?new Date(lead.submittedAt).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):""}</div>
+                        </div>
+                        {expandedLead===lead.id&&(
+                          <div className="db-expand">
+                            {lead.summary&&<div className="db-expand-summary" dangerouslySetInnerHTML={{__html:lead.summary.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br/>")}}/>}
+                            {(lead.aiScore!=null||lead.opsScore!=null||lead.growthScore!=null)&&(
+                              <div className="db-track-row">
+                                <div className="db-track"><div className="db-track-name">Readiness</div><div className="db-track-n">{lead.aiScore!=null?`${lead.aiScore}/12`:"—"}</div></div>
+                                <div className="db-track"><div className="db-track-name">Operations</div><div className="db-track-n">{lead.opsScore!=null?`${lead.opsScore}/12`:"—"}</div></div>
+                                <div className="db-track"><div className="db-track-name">Growth</div><div className="db-track-n">{lead.growthScore!=null?`${lead.growthScore}/12`:"—"}</div></div>
+                              </div>
+                            )}
+                            {lead.email&&<div style={{marginTop:".75rem",fontFamily:"'DM Mono',monospace",fontSize:".62rem",color:"var(--dim)"}}>{lead.email}</div>}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
             );
           })()}
