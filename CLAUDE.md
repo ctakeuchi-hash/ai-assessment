@@ -18,6 +18,7 @@ Bump the version when shipping meaningful changes.
 - `app/api/assess/route.js` — Anthropic API proxy for report generation
 - `app/api/save-lead/route.js` — Airtable lead capture
 - `app/api/log-error/route.js` — error logging to Airtable + Vercel console
+- `app/api/send-email/route.js` — HTML email delivery via Resend
 
 ## Environment variables (Vercel)
 
@@ -26,3 +27,5 @@ Bump the version when shipping meaningful changes.
 - `AIRTABLE_BASE_ID` — Airtable base
 - `AIRTABLE_TABLE_ID` — leads table
 - `AIRTABLE_ERRORS_TABLE_ID` — error logs table (optional)
+- `RESEND_API_KEY` — Resend API key for email delivery (get at resend.com)
+- `FROM_EMAIL` — verified sender address (e.g. `report@yourdomain.com`; defaults to `onboarding@resend.dev` for testing)

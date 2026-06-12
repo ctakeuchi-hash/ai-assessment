@@ -2,7 +2,7 @@
 
 import { useState, useLayoutEffect } from "react";
 
-const VERSION = "1.3";
+const VERSION = "1.4";
 
 /* ── FONTS ── */
 const GFONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,400&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');`;
@@ -129,7 +129,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font
 .mat-d{background:#020810;color:var(--blue);border:1px solid #0a1830}
 .mat-g{background:#021008;color:var(--teal);border:1px solid #0a2818}
 .mat-a{background:#081002;color:#90d040;border:1px solid #182808}
-.r-summary{font-size:.88rem;color:#6a8098;line-height:1.8}
+.r-summary{font-size:.85rem;color:#6a8098;line-height:1.65}
 .r-summary strong{color:#a8c0d0}
 
 .track-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.875rem;margin-bottom:2.5rem}
@@ -155,7 +155,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font
 .blind-card{background:#0c0814;border:1px solid #201030;border-left:2px solid #8040d0;padding:1.25rem}
 .blind-icon{font-size:1.25rem;margin-bottom:.4rem}
 .blind-name{font-size:.8rem;font-weight:600;color:#c0a0e8;margin-bottom:.3rem}
-.blind-desc{font-size:.78rem;color:#5a4868;line-height:1.55}
+.blind-desc{font-size:.78rem;color:#5a4868;line-height:1.5}
 
 /* QUICK WINS */
 .qw{display:flex;flex-direction:column;gap:.75rem}
@@ -166,7 +166,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font
 .bg-blue{background:#020810;color:var(--blue);border:1px solid #0a1830}
 .bg-rose{background:#0e0202;color:var(--rose);border:1px solid #2a0808}
 .qw-title{font-size:.87rem;font-weight:600;color:#b8ccdc;margin-bottom:.3rem}
-.qw-desc{font-size:.8rem;color:var(--muted);line-height:1.6}
+.qw-desc{font-size:.8rem;color:var(--muted);line-height:1.5}
 .qw-effort{display:flex;flex-direction:column;gap:.35rem;text-align:right;flex-shrink:0}
 .ef-label{font-family:'DM Mono',monospace;font-size:.52rem;color:var(--dim);text-transform:uppercase;letter-spacing:.07em}
 .ef-val{font-family:'DM Mono',monospace;font-size:.72rem}
@@ -181,7 +181,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font
 .r-gold .rec-tag{background:#140e02;color:#a07010}
 .r-blue .rec-tag{background:#020810;color:#2870c0}
 .r-teal .rec-tag{background:#021008;color:#20a070}
-.rec-body{font-size:.81rem;color:var(--muted);line-height:1.65}
+.rec-body{font-size:.81rem;color:var(--muted);line-height:1.55}
 .rec-body strong{color:#7a9ab0}
 
 /* ROADMAP */
@@ -521,89 +521,76 @@ export default function App() {
     const deepQs = deepData.questions.map((q,i)=>`Q: ${q.text}\nA: ${q.opts[ans.deep[i]??0]}`).join("\n");
     const coreQs = CORE.map(t=>t.questions.map((q,i)=>`Q: ${q.text}\nA: ${q.opts[ans[t.id][i]??0]}`).join("\n")).join("\n");
 
-    const prompt = `You are a senior business operations consultant generating a personalized assessment report. Your language must be outcome-focused and professional. CRITICAL RULES: Never mention specific software products, platforms, tools, or vendor names. Never use the words "AI", "artificial intelligence", "machine learning", or any variation. Instead use terms like: "intelligent automation", "automated workflow", "smart notification system", "automated messaging", "digital assistant", "automated content system", "virtual intake system", "automated scheduling", "intelligent routing system". Focus entirely on business outcomes: time saved, revenue recovered, customers retained, hours reclaimed.
+    const prompt = `You are a senior business operations consultant writing a concise, punchy assessment report. Be direct. No padding. Outcome-focused. RULES: No software/tool/vendor names. No "AI", "artificial intelligence", or "machine learning" — use "intelligent automation", "automated workflow", "smart notification", "automated messaging", "automated content system" instead.
 
 Business: ${biz.company||"the business"} | Industry: ${biz.industry} | Size: ${biz.size} | Role: ${biz.role}
 
 SCORES (each out of 12):
-- Operational Readiness: ${aiS}/12 (${aiM.label})
-- Operations Efficiency: ${opsS}/12 (${opsM.label})  
-- Growth & Sales: ${grS}/12 (${grM.label})
-- Industry Deep Dive: ${dpS}/20 (${MATURITY(dpS,20).label})
-- Overall: ${total}/36
+- Readiness: ${aiS}/12 (${aiM.label}) | Operations: ${opsS}/12 (${opsM.label}) | Growth: ${grS}/12 (${grM.label})
+- Industry Deep Dive: ${dpS}/20 | Overall: ${total}/36
 
-CORE ASSESSMENT ANSWERS:
+ANSWERS:
 ${coreQs}
 
-INDUSTRY-SPECIFIC ANSWERS (${biz.industry}):
+INDUSTRY ANSWERS (${biz.industry}):
 ${deepQs}
 
-INDUSTRY CONTEXT FOR RECOMMENDATIONS:
+INDUSTRY FOCUS:
 ${indCtx}
 
-Generate a comprehensive, highly personalized report. Reference their specific answers directly. Make every recommendation feel like it was written by someone who has worked inside their exact type of business.
-
-CRITICAL: Respond ONLY with valid JSON matching this exact structure:
+CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every field must be SHORT and punchy — no long sentences.
 
 {
-  "summary": "3 sentences. Acknowledge their strongest area, name their biggest operational gap based on their answers, and frame the opportunity ahead. Reference their industry specifically.",
+  "summary": "2 tight sentences max. Lead with their biggest gap, end with the opportunity. Specific to their industry.",
   "blindSpots": [
-    {"icon": "emoji", "title": "Short title (no AI/tool names)", "desc": "2 sentences explaining what they're missing and why it matters for their specific industry. Outcome-focused."},
-    {"icon": "emoji", "title": "Short title", "desc": "2 sentences."},
-    {"icon": "emoji", "title": "Short title", "desc": "2 sentences."}
+    {"icon": "emoji", "title": "4–6 word title", "desc": "1 sentence. Specific outcome they're missing."},
+    {"icon": "emoji", "title": "4–6 word title", "desc": "1 sentence."},
+    {"icon": "emoji", "title": "4–6 word title", "desc": "1 sentence."}
   ],
   "quickWins": [
-    {"badge": "bg-green", "badgeLabel": "Lowest Effort", "title": "Outcome-focused title", "desc": "2 sentences. Specific to their industry and answers. Reference what they said. No tool names.", "effort": "Low", "effortCls": "ef-low", "impact": "High"},
-    {"badge": "bg-gold", "badgeLabel": "Highest ROI", "title": "Outcome-focused title", "desc": "2 sentences specific to their situation.", "effort": "Low", "effortCls": "ef-low", "impact": "Very High"},
-    {"badge": "bg-blue", "badgeLabel": "Brand Builder", "title": "Outcome-focused title", "desc": "2 sentences.", "effort": "Medium", "effortCls": "ef-med", "impact": "High"},
-    {"badge": "bg-rose", "badgeLabel": "Operations Win", "title": "Outcome-focused title", "desc": "2 sentences.", "effort": "Medium", "effortCls": "ef-med", "impact": "High"}
+    {"badge": "bg-green", "badgeLabel": "Lowest Effort", "title": "Action-oriented title", "desc": "1 sentence. What it does and why it matters for their business.", "effort": "Low", "effortCls": "ef-low", "impact": "High"},
+    {"badge": "bg-gold", "badgeLabel": "Highest ROI", "title": "Action-oriented title", "desc": "1 sentence.", "effort": "Low", "effortCls": "ef-low", "impact": "Very High"},
+    {"badge": "bg-blue", "badgeLabel": "Brand Builder", "title": "Action-oriented title", "desc": "1 sentence.", "effort": "Medium", "effortCls": "ef-med", "impact": "High"},
+    {"badge": "bg-rose", "badgeLabel": "Operations Win", "title": "Action-oriented title", "desc": "1 sentence.", "effort": "Medium", "effortCls": "ef-med", "impact": "High"}
   ],
   "recommendations": [
-    {"cls": "r-gold", "tag": "Readiness", "title": "Specific recommendation title", "body": "2-3 sentences directly referencing their answers. No tool names. Outcome-focused."},
-    {"cls": "r-gold", "tag": "Readiness", "title": "Specific recommendation title", "body": "2-3 sentences."},
-    {"cls": "r-blue", "tag": "Operations", "title": "Specific recommendation title", "body": "2-3 sentences directly referencing their specific operational answers."},
-    {"cls": "r-blue", "tag": "Operations", "title": "Specific recommendation title", "body": "2-3 sentences."},
-    {"cls": "r-teal", "tag": "Growth", "title": "Specific recommendation title", "body": "2-3 sentences directly referencing their growth and industry answers."},
-    {"cls": "r-teal", "tag": "Growth", "title": "Specific recommendation title", "body": "2-3 sentences."}
+    {"cls": "r-gold", "tag": "Readiness", "title": "Specific title", "body": "2 sentences max. Direct reference to their answers."},
+    {"cls": "r-gold", "tag": "Readiness", "title": "Specific title", "body": "2 sentences max."},
+    {"cls": "r-blue", "tag": "Operations", "title": "Specific title", "body": "2 sentences max."},
+    {"cls": "r-blue", "tag": "Operations", "title": "Specific title", "body": "2 sentences max."},
+    {"cls": "r-teal", "tag": "Growth", "title": "Specific title", "body": "2 sentences max."},
+    {"cls": "r-teal", "tag": "Growth", "title": "Specific title", "body": "2 sentences max."}
   ],
   "roadmap": [
     {
-      "phase": "Phase 1 — Quick Wins",
-      "timeline": "Week 1–2",
-      "dotCls": "d1",
+      "phase": "Phase 1 — Quick Wins", "timeline": "Week 1–2", "dotCls": "d1",
       "items": [
-        {"name": "Automation name (no tool names)", "sub": "What it does in plain English", "effort": "Low", "effortCls": "effort-low", "impact": "High", "timeline": "Week 1"},
-        {"name": "Automation name", "sub": "What it does", "effort": "Low", "effortCls": "effort-low", "impact": "High", "timeline": "Week 1–2"},
-        {"name": "Automation name", "sub": "What it does", "effort": "Low", "effortCls": "effort-low", "impact": "Medium", "timeline": "Week 2"}
+        {"name": "Short name", "sub": "One-line description", "effort": "Low", "effortCls": "effort-low", "impact": "High", "timeline": "Week 1"},
+        {"name": "Short name", "sub": "One-line description", "effort": "Low", "effortCls": "effort-low", "impact": "High", "timeline": "Week 1–2"},
+        {"name": "Short name", "sub": "One-line description", "effort": "Low", "effortCls": "effort-low", "impact": "Medium", "timeline": "Week 2"}
       ]
     },
     {
-      "phase": "Phase 2 — Core Systems",
-      "timeline": "Week 3–4",
-      "dotCls": "d2",
+      "phase": "Phase 2 — Core Systems", "timeline": "Week 3–4", "dotCls": "d2",
       "items": [
-        {"name": "System name", "sub": "What it does", "effort": "Medium", "effortCls": "effort-med", "impact": "Very High", "timeline": "Week 3"},
-        {"name": "System name", "sub": "What it does", "effort": "Medium", "effortCls": "effort-med", "impact": "High", "timeline": "Week 3–4"},
-        {"name": "System name", "sub": "What it does", "effort": "Medium", "effortCls": "effort-med", "impact": "High", "timeline": "Week 4"}
+        {"name": "Short name", "sub": "One-line description", "effort": "Medium", "effortCls": "effort-med", "impact": "Very High", "timeline": "Week 3"},
+        {"name": "Short name", "sub": "One-line description", "effort": "Medium", "effortCls": "effort-med", "impact": "High", "timeline": "Week 3–4"},
+        {"name": "Short name", "sub": "One-line description", "effort": "Medium", "effortCls": "effort-med", "impact": "High", "timeline": "Week 4"}
       ]
     },
     {
-      "phase": "Phase 3 — Growth Engine",
-      "timeline": "Month 2",
-      "dotCls": "d3",
+      "phase": "Phase 3 — Growth Engine", "timeline": "Month 2", "dotCls": "d3",
       "items": [
-        {"name": "System name", "sub": "What it does", "effort": "Medium", "effortCls": "effort-med", "impact": "Very High", "timeline": "Month 2"},
-        {"name": "System name", "sub": "What it does", "effort": "High", "effortCls": "effort-high", "impact": "Very High", "timeline": "Month 2"},
-        {"name": "System name", "sub": "What it does", "effort": "High", "effortCls": "effort-high", "impact": "High", "timeline": "Month 2"}
+        {"name": "Short name", "sub": "One-line description", "effort": "Medium", "effortCls": "effort-med", "impact": "Very High", "timeline": "Month 2"},
+        {"name": "Short name", "sub": "One-line description", "effort": "High", "effortCls": "effort-high", "impact": "Very High", "timeline": "Month 2"},
+        {"name": "Short name", "sub": "One-line description", "effort": "High", "effortCls": "effort-high", "impact": "High", "timeline": "Month 2"}
       ]
     },
     {
-      "phase": "Phase 4 — Connected Operations",
-      "timeline": "Month 3",
-      "dotCls": "d4",
+      "phase": "Phase 4 — Connected Operations", "timeline": "Month 3", "dotCls": "d4",
       "items": [
-        {"name": "System name", "sub": "What it does", "effort": "High", "effortCls": "effort-high", "impact": "Transformative", "timeline": "Month 3"},
-        {"name": "System name", "sub": "What it does", "effort": "High", "effortCls": "effort-high", "impact": "High", "timeline": "Month 3"}
+        {"name": "Short name", "sub": "One-line description", "effort": "High", "effortCls": "effort-high", "impact": "Transformative", "timeline": "Month 3"},
+        {"name": "Short name", "sub": "One-line description", "effort": "High", "effortCls": "effort-high", "impact": "High", "timeline": "Month 3"}
       ]
     }
   ]
@@ -624,7 +611,7 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
       setResults({aiS,opsS,grS,total,aiM,opsM,grM,...parsed});
       setStep("results");
 
-      /* save lead to Airtable (fire-and-forget, don't block UI) */
+      /* save lead + send email (fire-and-forget) */
       fetch("/api/save-lead",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
@@ -633,6 +620,15 @@ CRITICAL: Respond ONLY with valid JSON matching this exact structure:
           size:biz.size, role:biz.role,
           scores:{ai:aiS, ops:opsS, growth:grS, overall:total},
           report: parsed.summary || ""
+        })
+      }).catch(()=>{});
+      fetch("/api/send-email",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          to:biz.email, company:biz.company, industry:biz.industry,
+          size:biz.size, role:biz.role,
+          results:{aiS,opsS,grS,total,aiM,opsM,grM,...parsed}
         })
       }).catch(()=>{});
     } catch(e) {
