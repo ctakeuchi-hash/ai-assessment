@@ -10,15 +10,13 @@ export async function GET() {
   }
 
   try {
-    // URLSearchParams encodes [ ] as %5B %5D which Airtable REST API v0 rejects;
-    // build the query string manually to keep brackets literal
+    // Airtable REST API v0 rejects sort by singleLineText field name;
+    // fetch without a sort param and sort by createdTime client-side
     const fieldList = ["Email","Company Name","Industry","Company Size","Role",
       "AI Readiness Score","Operations Score","Growth Score","Overall Score",
       "Assessment Report","Submitted At"]
     const qs = [
       "pageSize=100",
-      "sort[0][field]=Submitted%20At",
-      "sort[0][direction]=desc",
       ...fieldList.map(f => `fields[]=${encodeURIComponent(f)}`)
     ].join("&")
 
@@ -34,7 +32,9 @@ export async function GET() {
     }
 
     const data = await res.json()
-    const leads = (data.records || []).map(r => ({
+    const leads = (data.records || [])
+      .sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime))
+      .map(r => ({
       id: r.id,
       company: r.fields["Company Name"] || "",
       email: r.fields["Email"] || "",
