@@ -10,17 +10,20 @@ export async function GET() {
   }
 
   try {
-    // Build query — Airtable requires repeated fields[] params, not fields[0]
-    const params = new URLSearchParams({ pageSize: "100" })
-    params.append("sort[0][field]", "Submitted At")
-    params.append("sort[0][direction]", "desc")
-    const fields = ["Email","Company Name","Industry","Company Size","Role",
+    // URLSearchParams encodes [ ] as %5B %5D which Airtable REST API v0 rejects;
+    // build the query string manually to keep brackets literal
+    const fieldList = ["Email","Company Name","Industry","Company Size","Role",
       "AI Readiness Score","Operations Score","Growth Score","Overall Score",
       "Assessment Report","Submitted At"]
-    fields.forEach(f => params.append("fields[]", f))
+    const qs = [
+      "pageSize=100",
+      "sort[0][field]=Submitted%20At",
+      "sort[0][direction]=desc",
+      ...fieldList.map(f => `fields[]=${encodeURIComponent(f)}`)
+    ].join("&")
 
     const res = await fetch(
-      `https://api.airtable.com/v0/${baseId}/${tableId}?${params}`,
+      `https://api.airtable.com/v0/${baseId}/${tableId}?${qs}`,
       { headers: { Authorization: `Bearer ${pat}` } }
     )
 
