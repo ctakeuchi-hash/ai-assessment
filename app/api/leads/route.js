@@ -10,25 +10,15 @@ export async function GET() {
   }
 
   try {
-    // Airtable REST API v0 rejects sort by singleLineText field name;
-    // fetch without a sort param and sort by createdTime client-side
-    const fieldList = ["Email","Company Name","Industry","Company Size","Role",
-      "AI Readiness Score","Operations Score","Growth Score","Overall Score",
-      "Assessment Report","Submitted At"]
-    const qs = [
-      "pageSize=100",
-      ...fieldList.map(f => `fields[]=${encodeURIComponent(f)}`)
-    ].join("&")
-
     const res = await fetch(
-      `https://api.airtable.com/v0/${baseId}/${tableId}?${qs}`,
+      `https://api.airtable.com/v0/${baseId}/${tableId}?pageSize=100`,
       { headers: { Authorization: `Bearer ${pat}` } }
     )
 
     if (!res.ok) {
-      const err = await res.json()
-      console.error("Airtable fetch error:", err)
-      return Response.json({ error: "Failed to fetch leads" }, { status: 500 })
+      const text = await res.text()
+      console.error("Airtable fetch error:", res.status, text)
+      return Response.json({ error: "Failed to fetch leads", status: res.status, detail: text }, { status: 500 })
     }
 
     const data = await res.json()
