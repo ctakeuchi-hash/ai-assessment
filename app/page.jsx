@@ -2,7 +2,7 @@
 
 import { useState, useLayoutEffect, useEffect } from "react";
 
-const VERSION = "1.8";
+const VERSION = "1.9";
 
 /* ── FONTS ── */
 const GFONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,400&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');`;
@@ -282,6 +282,13 @@ textarea.finput{min-height:76px;resize:vertical;line-height:1.55;padding-top:.85
   .db-date{display:none}
   .db-track-row{grid-template-columns:1fr}
 }
+
+/* DETAIL MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(8,9,15,.96);z-index:100;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.modal-inner{max-width:700px;margin:0 auto;padding:2rem 1.5rem 6rem;position:relative}
+.modal-close{position:fixed;top:1.25rem;right:1.5rem;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:.5rem 1rem;cursor:pointer;z-index:101;transition:all .2s}
+.modal-close:hover{color:var(--text);border-color:var(--border2)}
+.modal-no-report{background:var(--surface);border:1px solid var(--border);padding:1.5rem 1.75rem;color:var(--muted);font-size:.88rem;line-height:1.75;margin-bottom:1.5rem}
 `;
 
 /* ── CONSTANTS ── */
@@ -538,6 +545,8 @@ export default function App() {
   const [leadsError, setLeadsError] = useState(null);
   const [leadsFilter, setLeadsFilter] = useState("all");
   const [expandedLead, setExpandedLead] = useState(null);
+  const [detailLead, setDetailLead] = useState(null);
+  const [detailOpenPh, setDetailOpenPh] = useState({0:true,1:false,2:false,3:false});
 
   const fetchLeads = async () => {
     setLeadsLoading(true);
@@ -724,6 +733,7 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
           size:biz.size, role: displayRole,
           scores:{ai:aiS, ops:opsS, growth:grS, overall:total},
           report: parsed.summary || "",
+          fullReport: JSON.stringify(parsed),
           freeform,
           generatedQuestions: generatedQuestions || null
         })
@@ -1222,7 +1232,7 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
                     )}
 
                     {filtered.map(lead=>(
-                      <div key={lead.id} className="db-lead" onClick={()=>setExpandedLead(expandedLead===lead.id?null:lead.id)}>
+                      <div key={lead.id} className="db-lead" onClick={()=>{setDetailLead(lead);setDetailOpenPh({0:true,1:false,2:false,3:false})}}>
                         <div className="db-lead-row">
                           <div>
                             <div className="db-company">{lead.company||lead.email||"Unknown"}</div>
@@ -1239,19 +1249,6 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
                           </div>
                           <div className="db-date">{lead.submittedAt?new Date(lead.submittedAt).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):""}</div>
                         </div>
-                        {expandedLead===lead.id&&(
-                          <div className="db-expand">
-                            {lead.summary&&<div className="db-expand-summary" dangerouslySetInnerHTML={{__html:lead.summary.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br/>")}}/>}
-                            {(lead.aiScore!=null||lead.opsScore!=null||lead.growthScore!=null)&&(
-                              <div className="db-track-row">
-                                <div className="db-track"><div className="db-track-name">Readiness</div><div className="db-track-n">{lead.aiScore!=null?`${lead.aiScore}/12`:"—"}</div></div>
-                                <div className="db-track"><div className="db-track-name">Operations</div><div className="db-track-n">{lead.opsScore!=null?`${lead.opsScore}/12`:"—"}</div></div>
-                                <div className="db-track"><div className="db-track-name">Growth</div><div className="db-track-n">{lead.growthScore!=null?`${lead.growthScore}/12`:"—"}</div></div>
-                              </div>
-                            )}
-                            {lead.email&&<div style={{marginTop:".75rem",fontFamily:"'DM Mono',monospace",fontSize:".62rem",color:"var(--dim)"}}>{lead.email}</div>}
-                          </div>
-                        )}
                       </div>
                     ))}
                   </>
@@ -1262,6 +1259,174 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
 
         </div>
       </div>
+
+      {/* ── DETAIL MODAL ── */}
+      {detailLead&&(
+        <div className="modal-overlay" onClick={e=>{if(e.target===e.currentTarget)setDetailLead(null)}}>
+          <button className="modal-close" onClick={()=>setDetailLead(null)}>✕ Close</button>
+          <div className="modal-inner">
+            <div className="r-header" style={{marginTop:"2rem"}}>
+              <div className="r-kicker">Operations Report · {detailLead.submittedAt?new Date(detailLead.submittedAt).toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}):""}</div>
+              <div className="r-title">{detailLead.company||"Unknown Business"}</div>
+              <div className="r-chips">
+                {detailLead.industry&&<span className="r-chip">{detailLead.industry}</span>}
+                {detailLead.size&&<span className="r-chip">{detailLead.size}</span>}
+                {detailLead.role&&<span className="r-chip">{detailLead.role}</span>}
+                {detailLead.email&&<span className="r-chip">{detailLead.email}</span>}
+              </div>
+            </div>
+
+            {detailLead.fullReport?(()=>{
+              const r = detailLead.fullReport;
+              const aiS = detailLead.aiScore??0;
+              const opsS = detailLead.opsScore??0;
+              const grS = detailLead.growthScore??0;
+              const total = detailLead.overallScore??0;
+              const togPh = i=>setDetailOpenPh(p=>({...p,[i]:!p[i]}));
+              return (
+                <>
+                  <div className="score-block">
+                    <div>
+                      <div className="big-n">{total}</div>
+                      <div className="big-sub">out of 36</div>
+                      <div className={`mat ${MATURITY(total,36).cls}`}>{MATURITY(total,36).label}</div>
+                    </div>
+                    <p className="r-summary" dangerouslySetInnerHTML={{__html:r.summary?.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")}}/>
+                  </div>
+
+                  <div className="track-row">
+                    {[
+                      {cls:"tc1",name:"Readiness",s:aiS,m:MATURITY(aiS,12)},
+                      {cls:"tc2",name:"Operations",s:opsS,m:MATURITY(opsS,12)},
+                      {cls:"tc3",name:"Growth & Sales",s:grS,m:MATURITY(grS,12)},
+                    ].map((t,i)=>(
+                      <div key={i} className={`tc ${t.cls}`}>
+                        <div className="tc-name">{t.name}</div>
+                        <div className="tc-num">{t.s}<span style={{fontSize:"1rem",color:"var(--dim)"}}>/12</span></div>
+                        <div className="tc-mat">{t.m.label}</div>
+                        <div className="bar"><div className="bar-f" style={{width:`${(t.s/12)*100}%`}}/></div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {r.blindSpots?.length>0&&(
+                    <div className="rsec">
+                      <div className="rsec-hdr">
+                        <div className="rsec-title">Blind Spots</div>
+                        <div className="rsec-sub">What you're not thinking about — but should be</div>
+                      </div>
+                      <div className="blind-grid">
+                        {r.blindSpots.map((b,i)=>(
+                          <div key={i} className="blind-card">
+                            <div className="blind-icon">{b.icon}</div>
+                            <div className="blind-name">{b.title}</div>
+                            <div className="blind-desc">{b.desc}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {r.quickWins?.length>0&&(
+                    <div className="rsec">
+                      <div className="rsec-hdr">
+                        <div className="rsec-title">Quick Wins</div>
+                        <div className="rsec-sub">High value · Matched to your situation</div>
+                      </div>
+                      <div className="qw">
+                        {r.quickWins.map((q,i)=>(
+                          <div key={i} className="qw-card">
+                            <div>
+                              <span className={`qw-badge ${q.badge}`}>{q.badgeLabel}</span>
+                              <div className="qw-title">{q.title}</div>
+                              <div className="qw-desc">{q.desc}</div>
+                            </div>
+                            <div className="qw-effort">
+                              <div><div className="ef-label">Effort</div><div className={`ef-val ${q.effortCls}`}>{q.effort}</div></div>
+                              <div><div className="ef-label">Impact</div><div className="ef-val" style={{color:"var(--teal)"}}>{q.impact}</div></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {r.recommendations?.length>0&&(
+                    <div className="rsec">
+                      <div className="rsec-hdr">
+                        <div className="rsec-title">Personalized Recommendations</div>
+                        <div className="rsec-sub">Based on their specific answers</div>
+                      </div>
+                      {r.recommendations.map((rec,i)=>(
+                        <div key={i} className={`rec ${rec.cls}`}>
+                          <div className="rec-hdr">
+                            <div className="rec-title">{rec.title}</div>
+                            <span className="rec-tag">{rec.tag}</span>
+                          </div>
+                          <div className="rec-body" dangerouslySetInnerHTML={{__html:rec.body?.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")}}/>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {r.roadmap?.length>0&&(
+                    <div className="rsec">
+                      <div className="rsec-hdr">
+                        <div className="rsec-title">90-Day Roadmap</div>
+                        <div className="rsec-sub">Sequenced by effort and impact</div>
+                      </div>
+                      <div className="roadmap">
+                        {r.roadmap.map((ph,pi)=>(
+                          <div key={pi} className="rm-ph">
+                            <div className="rm-ph-hdr" onClick={()=>togPh(pi)}>
+                              <div className={`rm-dot ${ph.dotCls}`}/>
+                              <div className="rm-ph-name">{ph.phase}</div>
+                              <div className="rm-ph-time">{ph.timeline}</div>
+                              <div className={`rm-chev ${detailOpenPh[pi]?"open":""}`}>▼</div>
+                            </div>
+                            {detailOpenPh[pi]&&(
+                              <>
+                                <div className="rm-cols-hdr">
+                                  <div className="rm-col-h">What Gets Built</div>
+                                  <div className="rm-col-h">Effort</div>
+                                  <div className="rm-col-h">Impact</div>
+                                  <div className="rm-col-h">When</div>
+                                </div>
+                                {ph.items?.map((item,ii)=>(
+                                  <div key={ii} className="rm-row" style={{background:ii%2===0?"#090c14":"#080b12"}}>
+                                    <div>
+                                      <div className="rm-item-name">{item.name}</div>
+                                      <div className="rm-item-sub">{item.sub}</div>
+                                    </div>
+                                    <div className="rm-col"><div className={`rm-val ${item.effortCls}`}>{item.effort}</div></div>
+                                    <div className="rm-col"><div className="rm-val" style={{color:"var(--teal)"}}>{item.impact}</div></div>
+                                    <div className="rm-col"><div className="rm-val" style={{color:"var(--dim)"}}>{item.timeline}</div></div>
+                                  </div>
+                                ))}
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })():(
+              <div className="modal-no-report">
+                {detailLead.summary&&(
+                  <div style={{marginBottom:"1.25rem"}} dangerouslySetInnerHTML={{__html:detailLead.summary.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br/>")}}/>
+                )}
+                <div className="db-track-row">
+                  <div className="db-track"><div className="db-track-name">Readiness</div><div className="db-track-n">{detailLead.aiScore!=null?`${detailLead.aiScore}/12`:"—"}</div></div>
+                  <div className="db-track"><div className="db-track-name">Operations</div><div className="db-track-n">{detailLead.opsScore!=null?`${detailLead.opsScore}/12`:"—"}</div></div>
+                  <div className="db-track"><div className="db-track-name">Growth</div><div className="db-track-n">{detailLead.growthScore!=null?`${detailLead.growthScore}/12`:"—"}</div></div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

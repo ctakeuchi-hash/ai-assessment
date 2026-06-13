@@ -12,7 +12,7 @@ export async function GET() {
   try {
     const fieldList = ["Email","Company Name","Industry","Company Size","Role",
       "AI Readiness Score","Operations Score","Growth Score","Overall Score",
-      "Assessment Report","Submitted At"]
+      "Assessment Report","Full Report JSON","Submitted At"]
     const qs = ["pageSize=100", ...fieldList.map(f => `fields[]=${encodeURIComponent(f)}`)].join("&")
 
     const res = await fetch(
@@ -41,6 +41,7 @@ export async function GET() {
       growthScore: r.fields["Growth Score"] ?? null,
       overallScore: r.fields["Overall Score"] ?? null,
       summary: r.fields["Assessment Report"] || "",
+      fullReport: (() => { try { const v = r.fields["Full Report JSON"]; return v ? JSON.parse(v) : null } catch { return null } })(),
       submittedAt: r.fields["Submitted At"] || ""
     }))
 
