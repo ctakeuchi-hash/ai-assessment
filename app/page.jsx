@@ -535,16 +535,29 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("assessment");
   const [leads, setLeads] = useState(null);
   const [leadsLoading, setLeadsLoading] = useState(false);
+  const [leadsError, setLeadsError] = useState(null);
   const [leadsFilter, setLeadsFilter] = useState("all");
   const [expandedLead, setExpandedLead] = useState(null);
 
   const fetchLeads = async () => {
     setLeadsLoading(true);
+    setLeadsError(null);
     try {
       const res = await fetch("/api/leads");
       const data = await res.json();
-      setLeads(data.leads || []);
+      if (!res.ok) {
+        setLeadsError(data.airtableStatus === 403
+          ? "Airtable read permission denied — update AIRTABLE_PAT in Vercel to include data.records:read scope."
+          : (data.error || "Failed to load assessments."));
+        setLeads([]);
+      } else if (data.unconfigured) {
+        setLeadsError("Airtable not configured — set AIRTABLE_PAT, AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID in Vercel.");
+        setLeads([]);
+      } else {
+        setLeads(data.leads || []);
+      }
     } catch {
+      setLeadsError("Network error — could not reach /api/leads.");
       setLeads([]);
     } finally {
       setLeadsLoading(false);
@@ -1165,6 +1178,11 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
                 </div>
 
                 {leadsLoading&&!leads&&<div className="db-loading">Loading assessments…</div>}
+
+                {leadsError&&<div className="db-empty" style={{borderLeft:"3px solid #c0392b",paddingLeft:"1rem",textAlign:"left"}}>
+                  <div className="db-empty-title" style={{color:"#e74c3c",fontSize:"1rem"}}>Dashboard Error</div>
+                  <div className="db-empty-sub">{leadsError}</div>
+                </div>}
 
                 {leads&&(
                   <>
