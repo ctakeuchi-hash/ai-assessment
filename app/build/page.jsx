@@ -152,7 +152,7 @@ export default function DragonScaleBuild() {
           <span style={{ fontSize: 15, fontWeight: 800, color: "#f0ede8", letterSpacing: "0.01em" }}>DragonScale</span>
         </a>
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-          <a href="https://ai-assessment-lake.vercel.app" className="dm" style={{ fontSize: 13, color: "#a09880", textDecoration: "none" }}>Free Assessment</a>
+          <a href="https://dragonscale.consulting" className="dm" style={{ fontSize: 13, color: "#a09880", textDecoration: "none" }}>Free Assessment</a>
           <a href="https://calendly.com/ctakeuchi" className="btn-gold" style={{ padding: "10px 22px", fontSize: 13 }}>Book Scoping Call</a>
         </div>
       </nav>
@@ -185,7 +185,7 @@ export default function DragonScaleBuild() {
 
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
             <a href="https://calendly.com/ctakeuchi" className="btn-gold">Book Free Scoping Call →</a>
-            <a href="https://ai-assessment-lake.vercel.app" className="btn-outline">Take the Assessment First</a>
+            <a href="https://dragonscale.consulting" className="btn-outline">Take the Assessment First</a>
           </div>
 
           <div className="dm" style={{ marginTop: 32, fontSize: 13, color: "#6b6458" }}>
@@ -347,7 +347,7 @@ export default function DragonScaleBuild() {
           </p>
           <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="https://calendly.com/ctakeuchi" className="btn-gold" style={{ fontSize: 16, padding: "16px 40px" }}>Book Scoping Call →</a>
-            <a href="https://ai-assessment-lake.vercel.app" className="btn-outline" style={{ fontSize: 16, padding: "16px 40px" }}>Take Free Assessment</a>
+            <a href="https://dragonscale.consulting" className="btn-outline" style={{ fontSize: 16, padding: "16px 40px" }}>Take Free Assessment</a>
           </div>
           <div className="dm" style={{ marginTop: 20, fontSize: 12, color: "#4a4440" }}>
             Chris Takeuchi · DragonScale · chris@dragonscale.ai
@@ -360,7 +360,7 @@ export default function DragonScaleBuild() {
         <div className="dm" style={{ fontSize: 13, fontWeight: 700, color: "#f0ede8" }}>DragonScale Build</div>
         <div className="dm" style={{ fontSize: 12, color: "#6b6458" }}>© 2026 DragonScale · Chris Takeuchi</div>
         <div style={{ display: "flex", gap: 24 }}>
-          <a href="https://ai-assessment-lake.vercel.app" className="dm" style={{ fontSize: 12, color: "#6b6458", textDecoration: "none" }}>Assess</a>
+          <a href="https://dragonscale.consulting" className="dm" style={{ fontSize: 12, color: "#6b6458", textDecoration: "none" }}>Assess</a>
           <a href="#" className="dm" style={{ fontSize: 12, color: "#6b6458", textDecoration: "none" }}>Brain</a>
           <a href="mailto:chris@dragonscale.ai" className="dm" style={{ fontSize: 12, color: "#6b6458", textDecoration: "none" }}>Contact</a>
         </div>

@@ -87,7 +87,7 @@ async function sendAdminNotification({ email, company, industry, size, role, sco
   <div style="font-size:11px;font-family:monospace;text-transform:uppercase;letter-spacing:1px;color:#aaa;margin-bottom:6px">Report Preview</div>
   <div style="font-size:12px;color:#555;line-height:1.7;background:#f8f6f0;padding:12px 14px;border-left:3px solid #e0d8cc">${summarySnippet}</div>
   <div style="margin-top:20px;text-align:center">
-    <a href="https://ai-assessment-lake.vercel.app" style="display:inline-block;background:#1a1208;color:#e8a020;font-family:monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:10px 20px;text-decoration:none">View Dashboard →</a>
+    <a href="https://dragonscale.consulting" style="display:inline-block;background:#1a1208;color:#e8a020;font-family:monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:10px 20px;text-decoration:none">View Dashboard →</a>
   </div>
 </td></tr>
 </table>
