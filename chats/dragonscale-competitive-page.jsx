@@ -179,7 +179,7 @@ export default function CompetitivePage() {
         </a>
         <div style={{ display:"flex",gap:16,alignItems:"center" }}>
           <a href="https://ai-assessment-lake.vercel.app" className="dm" style={{ fontSize:13,color:"#a09880",textDecoration:"none" }}>Free Assessment</a>
-          <a href="https://calendly.com/chris-takeuchi" className="btn-gold" style={{ padding:"10px 22px",fontSize:13 }}>Book a Call</a>
+          <a href="https://calendly.com/chris-dragonscale" className="btn-gold" style={{ padding:"10px 22px",fontSize:13 }}>Book a Call</a>
         </div>
       </nav>
 
@@ -407,7 +407,7 @@ export default function CompetitivePage() {
           </p>
           <div style={{ display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap" }}>
             <a href="https://ai-assessment-lake.vercel.app" className="btn-gold" style={{ fontSize:16,padding:"16px 40px" }}>Start Free Assessment →</a>
-            <a href="https://calendly.com/chris-takeuchi" className="btn-outline" style={{ fontSize:16,padding:"16px 40px" }}>Book Scoping Call</a>
+            <a href="https://calendly.com/chris-dragonscale" className="btn-outline" style={{ fontSize:16,padding:"16px 40px" }}>Book Scoping Call</a>
           </div>
           <div className="dm" style={{ marginTop:20,fontSize:12,color:"#4a4440" }}>Chris Takeuchi · DragonScale · chris@dragonscale.ai</div>
         </div>

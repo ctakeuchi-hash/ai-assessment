@@ -149,7 +149,7 @@ export default function ShieldPage() {
         <div style={{ display:"flex",gap:16,alignItems:"center" }}>
           <a href="/build" className="dm" style={{ fontSize:13,color:"#a09880",textDecoration:"none" }}>Build</a>
           <a href="/nexus" className="dm" style={{ fontSize:13,color:"#a09880",textDecoration:"none" }}>Nexus</a>
-          <a href="https://calendly.com/chris-takeuchi" className="btn-gold" style={{ padding:"10px 22px",fontSize:13 }}>Book a Call</a>
+          <a href="https://calendly.com/chris-dragonscale" className="btn-gold" style={{ padding:"10px 22px",fontSize:13 }}>Book a Call</a>
         </div>
       </nav>
 
@@ -183,7 +183,7 @@ export default function ShieldPage() {
           </p>
 
           <div style={{ display:"flex",gap:16,flexWrap:"wrap" }}>
-            <a href="https://calendly.com/chris-takeuchi" className="btn-gold">Add Shield to My Build →</a>
+            <a href="https://calendly.com/chris-dragonscale" className="btn-gold">Add Shield to My Build →</a>
             <a href="/build" className="btn-outline">Start with a Build First</a>
           </div>
         </div>
@@ -298,7 +298,7 @@ export default function ShieldPage() {
                   ↗ {t.upgradeNote}
                 </div>
 
-                <a href="https://calendly.com/chris-takeuchi" className="btn-gold" style={{ textAlign:"center",background:t.featured?"#a855f7":"#c8a96e",color:t.featured?"#fff":"#080810" }}>
+                <a href="https://calendly.com/chris-dragonscale" className="btn-gold" style={{ textAlign:"center",background:t.featured?"#a855f7":"#c8a96e",color:t.featured?"#fff":"#080810" }}>
                   Add Shield to My Engagement →
                 </a>
               </div>
@@ -394,7 +394,7 @@ export default function ShieldPage() {
             Add it at Build handoff or anytime after. Month-to-month after the first 3 months.
           </p>
           <div style={{ display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap" }}>
-            <a href="https://calendly.com/chris-takeuchi" className="btn-gold" style={{ fontSize:16,padding:"16px 40px" }}>Add Shield →</a>
+            <a href="https://calendly.com/chris-dragonscale" className="btn-gold" style={{ fontSize:16,padding:"16px 40px" }}>Add Shield →</a>
             <a href="/build" className="btn-outline" style={{ fontSize:16,padding:"16px 40px" }}>Start with a Build</a>
           </div>
           <div className="dm" style={{ marginTop:20,fontSize:12,color:"#4a4440" }}>Chris Takeuchi · DragonScale · chris@dragonscale.consulting</div>

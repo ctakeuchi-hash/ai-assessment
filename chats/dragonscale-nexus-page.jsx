@@ -203,7 +203,7 @@ export default function NexusPage() {
         <div style={{ display:"flex",gap:16,alignItems:"center" }}>
           <a href="#pricing" className="dm" style={{ fontSize:13,color:"#a09880",textDecoration:"none" }}>Pricing</a>
           <a href="#how-it-works" className="dm" style={{ fontSize:13,color:"#a09880",textDecoration:"none" }}>How It Works</a>
-          <a href="https://calendly.com/chris-takeuchi" className="btn-gold" style={{ padding:"10px 22px",fontSize:13 }}>Book a Demo</a>
+          <a href="https://calendly.com/chris-dragonscale" className="btn-gold" style={{ padding:"10px 22px",fontSize:13 }}>Book a Demo</a>
         </div>
       </nav>
 
@@ -263,7 +263,7 @@ export default function NexusPage() {
           </p>
 
           <div style={{ display:"flex",gap:16,flexWrap:"wrap" }}>
-            <a href="https://calendly.com/chris-takeuchi" className="btn-gold">Book a Live Demo →</a>
+            <a href="https://calendly.com/chris-dragonscale" className="btn-gold">Book a Live Demo →</a>
             <a href="#pricing" className="btn-outline">See Pricing</a>
           </div>
           <div className="dm" style={{ marginTop:20,fontSize:13,color:"#6b6458" }}>
@@ -400,7 +400,7 @@ export default function NexusPage() {
                   🔑 Entry: {t.entry}
                 </div>
 
-                <a href="https://calendly.com/chris-takeuchi" className="btn-gold" style={{ textAlign:"center",background:t.featured?"#a855f7":"#c8a96e",color:t.featured?"#fff":"#080810" }}>
+                <a href="https://calendly.com/chris-dragonscale" className="btn-gold" style={{ textAlign:"center",background:t.featured?"#a855f7":"#c8a96e",color:t.featured?"#fff":"#080810" }}>
                   Book a Demo →
                 </a>
               </div>
@@ -433,7 +433,7 @@ export default function NexusPage() {
             Book a 30-minute live demo. We'll connect a sample of your data and show you exactly what Nexus sees — before you sign anything.
           </p>
           <div style={{ display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap" }}>
-            <a href="https://calendly.com/chris-takeuchi" className="btn-gold" style={{ fontSize:16,padding:"16px 40px" }}>Book Live Demo →</a>
+            <a href="https://calendly.com/chris-dragonscale" className="btn-gold" style={{ fontSize:16,padding:"16px 40px" }}>Book Live Demo →</a>
             <a href="https://ai-assessment-lake.vercel.app" className="btn-outline" style={{ fontSize:16,padding:"16px 40px" }}>Start with Assessment</a>
           </div>
           <div className="dm" style={{ marginTop:20,fontSize:12,color:"#4a4440" }}>Chris Takeuchi · DragonScale · chris@dragonscale.ai</div>
