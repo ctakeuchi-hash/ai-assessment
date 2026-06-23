@@ -2,7 +2,7 @@
 
 import { useState, useLayoutEffect, useEffect } from "react";
 
-const VERSION = "2.0";
+const VERSION = "2.1";
 
 /* ── FONTS ── */
 const GFONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,400&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');`;
@@ -797,7 +797,7 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
           {/* TABS */}
           <div className="tab-bar">
             <button className={`tab-btn${activeTab==="assessment"?" tab-active":""}`} onClick={()=>setActiveTab("assessment")}>Assessment</button>
-            <button className={`tab-btn${activeTab==="dashboard"?" tab-active":""}`} onClick={()=>setActiveTab("dashboard")}>Dashboard</button>
+            {!isPublic && <button className={`tab-btn${activeTab==="dashboard"?" tab-active":""}`} onClick={()=>setActiveTab("dashboard")}>Dashboard</button>}
             {!isPublic && <a href="/copilot" className="tab-btn" style={{textDecoration:"none"}}>Call Copilot</a>}
             {!isPublic && <a href="/build" className="tab-btn" style={{textDecoration:"none"}}>Build</a>}
           </div>
