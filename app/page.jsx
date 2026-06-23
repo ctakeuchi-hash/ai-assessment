@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useLayoutEffect, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 
 const VERSION = "1.9";
 
@@ -524,6 +525,8 @@ const MATURITY = (s, max) => {
 const STEPS = ["Your Business","Readiness","Operations","Growth","Industry","Report"];
 
 export default function App() {
+  const searchParams = useSearchParams();
+  const isPublic = searchParams.has("public");
   const [step, setStep] = useState("intro");
   const [biz, setBiz] = useState({company:"",industry:"",size:"",role:"",email:""});
   const [ans, setAns] = useState({ai:{},ops:{},growth:{},deep:{}});
@@ -797,8 +800,8 @@ CRITICAL: Respond ONLY with valid JSON. Be specific to their answers. Every fiel
           <div className="tab-bar">
             <button className={`tab-btn${activeTab==="assessment"?" tab-active":""}`} onClick={()=>setActiveTab("assessment")}>Assessment</button>
             <button className={`tab-btn${activeTab==="dashboard"?" tab-active":""}`} onClick={()=>setActiveTab("dashboard")}>Dashboard</button>
-            <a href="/copilot" className="tab-btn" style={{textDecoration:"none"}}>Call Copilot</a>
-            <a href="/build" className="tab-btn" style={{textDecoration:"none"}}>Build</a>
+            {!isPublic && <a href="/copilot" className="tab-btn" style={{textDecoration:"none"}}>Call Copilot</a>}
+            {!isPublic && <a href="/build" className="tab-btn" style={{textDecoration:"none"}}>Build</a>}
           </div>
 
           {/* PROGRESS */}
