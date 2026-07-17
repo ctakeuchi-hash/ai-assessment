@@ -1,19 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { renderToBuffer, type DocumentProps } from '@react-pdf/renderer';
 import { createElement, type JSXElementConstructor, type ReactElement } from 'react';
-import { getSession, getSessionSuggestions } from '@/lib/session';
+import type { SessionDetail, CopilotSuggestion } from '@/types';
 import { FollowUpPDF } from '@/components/copilot/FollowUpPDF';
 
 export async function POST(req: NextRequest) {
-  const { sessionId, clientName, consultantName } = await req.json();
-  if (!sessionId) return NextResponse.json({ error: 'sessionId required' }, { status: 400 });
+  const { session, suggestions, clientName, consultantName } = await req.json() as {
+    session: SessionDetail;
+    suggestions: CopilotSuggestion[];
+    clientName?: string;
+    consultantName?: string;
+  };
 
-  const [session, suggestions] = await Promise.all([
-    getSession(sessionId),
-    getSessionSuggestions(sessionId),
-  ]);
-
-  if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+  if (!session) return NextResponse.json({ error: 'session required' }, { status: 400 });
 
   const element = createElement(FollowUpPDF, {
     session,

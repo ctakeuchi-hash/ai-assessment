@@ -60,13 +60,13 @@ export default function HistoryPage() {
   };
 
   const generateFollowUp = async () => {
-    if (!selectedId) return;
+    if (!selectedId || !detail) return;
     setGeneratingPDF(true);
     try {
       const res = await fetch('/api/generate-followup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: selectedId, clientName, consultantName }),
+        body: JSON.stringify({ session: detail, suggestions, clientName, consultantName }),
       });
       if (!res.ok) throw new Error('Failed');
       const blob = await res.blob();
