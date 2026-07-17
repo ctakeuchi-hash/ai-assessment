@@ -1,6 +1,9 @@
 'use client';
 
-import type { CurrentStateMap } from '@/types';
+import { useState } from 'react';
+import type { CurrentStateMap, Workflow } from '@/types';
+import { generateWorkflow } from '@/lib/anthropic';
+import { WorkflowCanvas } from '@/components/workflow/WorkflowCanvas';
 
 const MATURITY_STYLES = {
   beginner:   { color: '#e85858', bg: '#1a0808', border: '#4a1818', label: 'Beginner' },
@@ -21,6 +24,10 @@ interface ClientBriefProps {
 }
 
 export function ClientBrief({ map, extracting }: ClientBriefProps) {
+  const [diagramming, setDiagramming] = useState<number | null>(null);
+  const [workflow, setWorkflow] = useState<Workflow | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
   if (!map && !extracting) {
     return (
       <div style={{ padding: '3rem 1.25rem', textAlign: 'center', color: '#2a3040', fontFamily: "'DM Mono', monospace", fontSize: '0.72rem', letterSpacing: '0.08em', lineHeight: 1.7 }}>
@@ -50,6 +57,17 @@ export function ClientBrief({ map, extracting }: ClientBriefProps) {
     if (secs < 60) return 'just now';
     const mins = Math.floor(secs / 60);
     return `${mins}m ago`;
+  };
+
+  const diagramArea = async (i: number, area: CurrentStateMap['processes'][number]) => {
+    setDiagramming(i);
+    try {
+      const description = `${area.area}: ${area.currentState}${area.painPoints.length ? `. Pain points: ${area.painPoints.join('; ')}` : ''}`;
+      const wf = await generateWorkflow(description);
+      setWorkflow(wf);
+      setSelectedId(null);
+    } catch {}
+    setDiagramming(null);
   };
 
   return (
@@ -104,6 +122,14 @@ export function ClientBrief({ map, extracting }: ClientBriefProps) {
                   ))}
                 </ul>
               )}
+
+              <button
+                onClick={() => diagramArea(i, area)}
+                disabled={diagramming === i}
+                style={{ marginTop: '0.6rem', fontFamily: "'DM Mono', monospace", fontSize: '0.58rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: diagramming === i ? '#3a4a60' : '#4a9eff', background: 'none', border: '1px solid #1c2030', padding: '0.25rem 0.6rem', cursor: diagramming === i ? 'not-allowed' : 'pointer' }}
+              >
+                {diagramming === i ? 'Diagramming…' : 'Diagram This →'}
+              </button>
             </div>
           );
         })
@@ -150,6 +176,33 @@ export function ClientBrief({ map, extracting }: ClientBriefProps) {
               <li key={i} style={{ fontSize: '0.78rem', color: '#406858', lineHeight: 1.6 }}>{s}</li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {workflow && (
+        <div
+          onClick={() => setWorkflow(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(4,5,10,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '2rem' }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: '#08090f', border: '1px solid #1c2030', maxWidth: '90vw', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', borderBottom: '1px solid #1c2030' }}>
+              <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.05rem', color: '#f0ead8' }}>
+                {workflow.title}
+              </span>
+              <button
+                onClick={() => setWorkflow(null)}
+                style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.65rem', color: '#3a4a60', background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                ✕ Close
+              </button>
+            </div>
+            <div style={{ overflow: 'auto', padding: '1rem' }}>
+              <WorkflowCanvas workflow={workflow} selectedId={selectedId} onSelect={setSelectedId} />
+            </div>
+          </div>
         </div>
       )}
     </div>
