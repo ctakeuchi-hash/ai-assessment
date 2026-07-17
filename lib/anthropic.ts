@@ -60,9 +60,11 @@ export async function getCopilotSuggestions(
   }
 
   const data = await res.json();
-  return (data.suggestions ?? []).map((s: any, i: number) => ({
+  return (data.suggestions ?? []).map((s: any) => ({
     ...s,
-    id: `${Date.now()}-${i}`,
+    // Stable per (type, headline) so a re-surfaced suggestion reuses its existing
+    // card/React key instead of mounting fresh and collapsing what's expanded.
+    id: `${s.type}:${s.headline}`,
     timestamp: Date.now(),
   })) as CopilotSuggestion[];
 }

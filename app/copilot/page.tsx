@@ -158,8 +158,11 @@ export default function CopilotPage() {
         const newSuggestions = await getCopilotSuggestions(fullTranscriptRef.current, context);
         if (newSuggestions.length > 0) {
           setSuggestions(prev => {
-            const merged = [...newSuggestions, ...prev].slice(0, MAX_SUGGESTIONS);
-            if (sessionIdRef.current) saveSuggestions(sessionIdRef.current, newSuggestions);
+            const existingIds = new Set(prev.map(s => s.id));
+            const toAdd = newSuggestions.filter(s => !existingIds.has(s.id));
+            if (toAdd.length === 0) return prev;
+            const merged = [...toAdd, ...prev].slice(0, MAX_SUGGESTIONS);
+            if (sessionIdRef.current) saveSuggestions(sessionIdRef.current, toAdd);
             return merged;
           });
         }
