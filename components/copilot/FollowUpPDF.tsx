@@ -1,38 +1,53 @@
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, Image, StyleSheet, Font } from '@react-pdf/renderer';
+import path from 'path';
 import type { SessionDetail } from '@/lib/session';
 import type { CopilotSuggestion } from '@/types';
+
+// DragonScale brand
+const BRAND_DARK = '#08090f';
+const BRAND_TEAL = '#38d4a0';
+const BRAND_TEAL_TEXT = '#0d9488'; // darker shade of the brand teal for readable text on white
+const LOGO_PATH = path.join(process.cwd(), 'public', 'dragonscale-logo.png');
 
 const styles = StyleSheet.create({
   page: {
     backgroundColor: '#ffffff',
-    padding: 48,
     fontFamily: 'Helvetica',
   },
+  body: {
+    padding: 48,
+    paddingTop: 24,
+  },
   header: {
+    backgroundColor: BRAND_DARK,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 32,
-    paddingBottom: 16,
-    borderBottom: '1.5pt solid #0f172a',
+    alignItems: 'center',
+    padding: 24,
+    paddingHorizontal: 48,
+    marginBottom: 28,
   },
-  headerLeft: {},
+  logo: {
+    width: 100,
+    height: 45, // matches the source lockup's 720:326 aspect ratio
+  },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   label: {
     fontSize: 7,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
-    color: '#64748b',
+    color: BRAND_TEAL,
     marginBottom: 4,
   },
   clientName: {
     fontSize: 18,
     fontFamily: 'Helvetica-Bold',
-    color: '#0f172a',
+    color: '#ffffff',
     marginBottom: 2,
   },
   headerMeta: {
     fontSize: 9,
-    color: '#64748b',
+    color: '#8ab0a0',
   },
   consultantBlock: {
     alignItems: 'flex-end',
@@ -40,7 +55,7 @@ const styles = StyleSheet.create({
   consultantName: {
     fontSize: 10,
     fontFamily: 'Helvetica-Bold',
-    color: '#0f172a',
+    color: '#ffffff',
     marginBottom: 2,
   },
   section: {
@@ -50,7 +65,7 @@ const styles = StyleSheet.create({
     fontSize: 7,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
-    color: '#94a3b8',
+    color: BRAND_TEAL_TEXT,
     marginBottom: 6,
     fontFamily: 'Helvetica-Bold',
   },
@@ -83,12 +98,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   divider: {
-    borderBottom: '0.5pt solid #e2e8f0',
+    borderBottom: '0.5pt solid #ccf0e4',
     marginBottom: 20,
   },
   solutionCard: {
-    backgroundColor: '#f8fafc',
-    border: '0.5pt solid #e2e8f0',
+    backgroundColor: '#f2fbf8',
+    border: '0.5pt solid #ccf0e4',
     padding: 12,
     marginBottom: 10,
   },
@@ -118,11 +133,11 @@ const styles = StyleSheet.create({
   },
   benefitChip: {
     fontSize: 8,
-    color: '#059669',
-    backgroundColor: '#f0fdf4',
+    color: BRAND_TEAL_TEXT,
+    backgroundColor: '#e6faf3',
     paddingVertical: 3,
     paddingHorizontal: 7,
-    border: '0.5pt solid #a7f3d0',
+    border: `0.5pt solid ${BRAND_TEAL}`,
   },
   investmentGrid: {
     flexDirection: 'row',
@@ -153,7 +168,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   nextStep: {
-    backgroundColor: '#0f172a',
+    backgroundColor: BRAND_DARK,
     padding: 14,
     marginTop: 8,
   },
@@ -170,12 +185,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTop: '0.5pt solid #e2e8f0',
+    borderTop: `0.5pt solid ${BRAND_TEAL}`,
     paddingTop: 10,
   },
   footerText: {
     fontSize: 8,
-    color: '#94a3b8',
+    color: '#64748b',
+  },
+  footerBrand: {
+    fontSize: 7,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    fontFamily: 'Helvetica-Bold',
+    color: BRAND_TEAL_TEXT,
   },
   confidential: {
     fontSize: 7,
@@ -216,15 +238,20 @@ export function FollowUpPDF({ session, suggestions, clientName, consultantName }
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.label}>Prepared for</Text>
-            <Text style={styles.clientName}>{clientName || 'Client'}</Text>
-            <Text style={styles.headerMeta}>{date}</Text>
+            <Image src={LOGO_PATH} style={styles.logo} />
+            <View>
+              <Text style={styles.label}>Prepared for</Text>
+              <Text style={styles.clientName}>{clientName || 'Client'}</Text>
+              <Text style={styles.headerMeta}>{date}</Text>
+            </View>
           </View>
           <View style={styles.consultantBlock}>
             <Text style={styles.label}>Submitted by</Text>
             <Text style={styles.consultantName}>{consultantName || 'Consultant'}</Text>
           </View>
         </View>
+
+        <View style={styles.body}>
 
         {/* Our Understanding */}
         <View style={styles.section}>
@@ -337,8 +364,11 @@ export function FollowUpPDF({ session, suggestions, clientName, consultantName }
           </View>
         </View>
 
+        </View>
+
         {/* Footer */}
         <View style={styles.footer} fixed>
+          <Text style={styles.footerBrand}>DragonScale</Text>
           <Text style={styles.footerText}>{consultantName} · {date}</Text>
           <Text style={styles.confidential}>Confidential</Text>
         </View>
