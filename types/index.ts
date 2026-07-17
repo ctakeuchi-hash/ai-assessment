@@ -57,3 +57,24 @@ export interface CurrentStateMap {
   budgetSignals: string[];
   timelineSignals: string[];
 }
+
+export interface SessionRow {
+  id: string;
+  created_at: string;
+  ended_at: string | null;
+  title: string | null;
+  segment_count: number;
+  summary_tldr: string | null;
+}
+
+export interface SessionDetail {
+  id: string;
+  created_at: string;
+  ended_at: string | null;
+  title: string | null;
+  summary_tldr: string | null;
+  summary_topics: { heading: string; bullets: string[] }[] | null;
+  summary_client_needs: string[] | null;
+  summary_open_questions: string[] | null;
+  current_state_map: CurrentStateMap | null;
+}

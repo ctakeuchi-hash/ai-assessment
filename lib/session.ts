@@ -1,10 +1,44 @@
 import { getSupabase } from './supabase';
-import type { TranscriptSegment, CopilotSuggestion, CurrentStateMap } from '@/types';
+import type { TranscriptSegment, CopilotSuggestion, CurrentStateMap, SessionRow, SessionDetail } from '@/types';
 import type { MeetingSummary } from './anthropic';
+
+export type { SessionRow, SessionDetail };
+
+// Write ops are only ever called from client components (the copilot recording
+// page), so a relative fetch is always safe here.
+async function localPost<T = { ok: true }>(action: string, body: Record<string, unknown> = {}): Promise<T> {
+  const res = await fetch('/api/local-sessions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, ...body }),
+  });
+  return res.json();
+}
+
+// Read ops are called from both client components (history page) and server
+// API routes (PDF/CRM generation), so route straight to the fs store when on
+// the server instead of fetching a relative URL (which has no base there).
+async function localGet<T>(action: string, params: Record<string, string> = {}): Promise<T> {
+  if (typeof window === 'undefined') {
+    const store = await import('./local-session-store');
+    switch (action) {
+      case 'list': return store.listLocalSessions() as Promise<T>;
+      case 'get': return store.getLocalSession(params.id) as Promise<T>;
+      case 'segments': return store.getLocalSessionSegments(params.id) as Promise<T>;
+      case 'suggestions': return store.getLocalSessionSuggestions(params.id) as Promise<T>;
+    }
+  }
+  const qs = new URLSearchParams({ action, ...params }).toString();
+  const res = await fetch(`/api/local-sessions?${qs}`);
+  return res.json();
+}
 
 export async function createSession(): Promise<string | null> {
   const db = getSupabase();
-  if (!db) return null;
+  if (!db) {
+    const { id } = await localPost<{ id: string }>('create');
+    return id;
+  }
   const { data, error } = await db
     .from('copilot_sessions')
     .insert({ title: `Call — ${new Date().toLocaleString()}` })
@@ -16,7 +50,7 @@ export async function createSession(): Promise<string | null> {
 
 export async function endSession(sessionId: string, summary?: MeetingSummary | null, currentStateMap?: CurrentStateMap | null) {
   const db = getSupabase();
-  if (!db) return;
+  if (!db) { await localPost('end', { sessionId, summary, currentStateMap }); return; }
   const patch: Record<string, unknown> = { ended_at: new Date().toISOString() };
   if (summary) {
     patch.summary_tldr = summary.tldr;
@@ -33,7 +67,7 @@ export async function endSession(sessionId: string, summary?: MeetingSummary | n
 
 export async function updateSessionSummary(sessionId: string, summary: MeetingSummary) {
   const db = getSupabase();
-  if (!db) return;
+  if (!db) { await localPost('summary', { sessionId, summary }); return; }
   const { error } = await db.from('copilot_sessions').update({
     summary_tldr: summary.tldr,
     summary_topics: summary.topics,
@@ -45,7 +79,7 @@ export async function updateSessionSummary(sessionId: string, summary: MeetingSu
 
 export async function updateSessionStateMap(sessionId: string, map: CurrentStateMap) {
   const db = getSupabase();
-  if (!db) return;
+  if (!db) { await localPost('stateMap', { sessionId, map }); return; }
   const { error } = await db.from('copilot_sessions').update({
     current_state_map: map,
   }).eq('id', sessionId);
@@ -54,7 +88,7 @@ export async function updateSessionStateMap(sessionId: string, map: CurrentState
 
 export async function saveSegment(sessionId: string, segment: TranscriptSegment) {
   const db = getSupabase();
-  if (!db) return;
+  if (!db) { await localPost('segment', { sessionId, segment }); return; }
   const { error } = await db.from('copilot_segments').insert({
     session_id: sessionId,
     text: segment.text,
@@ -65,7 +99,7 @@ export async function saveSegment(sessionId: string, segment: TranscriptSegment)
 
 export async function saveSuggestions(sessionId: string, suggestions: CopilotSuggestion[]) {
   const db = getSupabase();
-  if (!db) return;
+  if (!db) { await localPost('suggestions', { sessionId, suggestions }); return; }
   const rows = suggestions.map(s => ({
     session_id: sessionId,
     type: s.type,
@@ -84,18 +118,9 @@ export async function saveSuggestions(sessionId: string, suggestions: CopilotSug
   if (error) console.error('saveSuggestions', error);
 }
 
-export interface SessionRow {
-  id: string;
-  created_at: string;
-  ended_at: string | null;
-  title: string | null;
-  segment_count: number;
-  summary_tldr: string | null;
-}
-
 export async function listSessions(): Promise<SessionRow[]> {
   const db = getSupabase();
-  if (!db) return [];
+  if (!db) return localGet<SessionRow[]>('list');
   const { data, error } = await db
     .from('copilot_sessions')
     .select('id, created_at, ended_at, title, segment_count, summary_tldr')
@@ -105,21 +130,9 @@ export async function listSessions(): Promise<SessionRow[]> {
   return data ?? [];
 }
 
-export interface SessionDetail {
-  id: string;
-  created_at: string;
-  ended_at: string | null;
-  title: string | null;
-  summary_tldr: string | null;
-  summary_topics: MeetingSummary['topics'] | null;
-  summary_client_needs: string[] | null;
-  summary_open_questions: string[] | null;
-  current_state_map: CurrentStateMap | null;
-}
-
 export async function getSession(id: string): Promise<SessionDetail | null> {
   const db = getSupabase();
-  if (!db) return null;
+  if (!db) return localGet<SessionDetail | null>('get', { id });
   const { data, error } = await db
     .from('copilot_sessions')
     .select('id, created_at, ended_at, title, summary_tldr, summary_topics, summary_client_needs, summary_open_questions, current_state_map')
@@ -131,7 +144,7 @@ export async function getSession(id: string): Promise<SessionDetail | null> {
 
 export async function getSessionSegments(sessionId: string): Promise<TranscriptSegment[]> {
   const db = getSupabase();
-  if (!db) return [];
+  if (!db) return localGet<TranscriptSegment[]>('segments', { id: sessionId });
   const { data, error } = await db
     .from('copilot_segments')
     .select('id, text, timestamp_ms')
@@ -143,7 +156,7 @@ export async function getSessionSegments(sessionId: string): Promise<TranscriptS
 
 export async function getSessionSuggestions(sessionId: string): Promise<CopilotSuggestion[]> {
   const db = getSupabase();
-  if (!db) return [];
+  if (!db) return localGet<CopilotSuggestion[]>('suggestions', { id: sessionId });
   const { data, error } = await db
     .from('copilot_suggestions')
     .select('*')
