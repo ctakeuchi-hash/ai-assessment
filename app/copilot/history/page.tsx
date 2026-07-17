@@ -31,6 +31,8 @@ export default function HistoryPage() {
   const [clientName, setClientName] = useState('');
   const [consultantName, setConsultantName] = useState('');
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [exportingDoc, setExportingDoc] = useState(false);
+  const [docError, setDocError] = useState<string | null>(null);
   const [showCRMModal, setShowCRMModal] = useState(false);
   const [crmCompany, setCrmCompany] = useState('');
   const [crmContact, setCrmContact] = useState('');
@@ -79,6 +81,26 @@ export default function HistoryPage() {
       setShowFollowUpModal(false);
     } catch {}
     setGeneratingPDF(false);
+  };
+
+  const exportToGoogleDoc = async () => {
+    if (!detail) return;
+    setExportingDoc(true);
+    setDocError(null);
+    try {
+      const res = await fetch('/api/export-to-doc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session: detail, suggestions, clientName, consultantName }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create Google Doc');
+      window.open(data.url, '_blank');
+      setShowFollowUpModal(false);
+    } catch (e) {
+      setDocError(e instanceof Error ? e.message : 'Failed to create Google Doc');
+    }
+    setExportingDoc(false);
   };
 
   const pushSessionToCRM = async () => {
@@ -346,6 +368,12 @@ export default function HistoryPage() {
               />
             </div>
 
+            {docError && (
+              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.68rem', color: '#e85858', lineHeight: 1.5 }}>
+                {docError}
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: '0.75rem' }}>
               <button
                 onClick={generateFollowUp}
@@ -353,6 +381,13 @@ export default function HistoryPage() {
                 style={{ flex: 1, fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: generatingPDF ? '#3a4a60' : '#08090f', background: generatingPDF ? '#1c2030' : '#38d4a0', border: 'none', padding: '0.65rem', cursor: generatingPDF ? 'not-allowed' : 'pointer' }}
               >
                 {generatingPDF ? 'Generating…' : 'Download PDF'}
+              </button>
+              <button
+                onClick={exportToGoogleDoc}
+                disabled={exportingDoc}
+                style={{ flex: 1, fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: exportingDoc ? '#3a4a60' : '#4a9eff', background: 'none', border: `1px solid ${exportingDoc ? '#1c2030' : '#0a1830'}`, padding: '0.65rem', cursor: exportingDoc ? 'not-allowed' : 'pointer' }}
+              >
+                {exportingDoc ? 'Exporting…' : 'Export to Google Doc'}
               </button>
               <button
                 onClick={() => setShowFollowUpModal(false)}
