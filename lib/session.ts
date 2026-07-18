@@ -54,6 +54,16 @@ export async function updateSessionSummary(sessionId: string, summary: MeetingSu
   if (error) console.error('updateSessionSummary', error);
 }
 
+export async function updateSessionTitle(sessionId: string, title: string) {
+  const db = getSupabase();
+  if (!db) {
+    try { await local.updateLocalSessionTitle(sessionId, title); } catch (e) { console.error('updateSessionTitle (local)', e); }
+    return;
+  }
+  const { error } = await db.from('copilot_sessions').update({ title }).eq('id', sessionId);
+  if (error) console.error('updateSessionTitle', error);
+}
+
 export async function updateSessionStateMap(sessionId: string, map: CurrentStateMap) {
   const db = getSupabase();
   if (!db) {

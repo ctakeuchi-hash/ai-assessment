@@ -84,6 +84,13 @@ export async function updateLocalSessionSummary(id: string, summary: MeetingSumm
   await put(s);
 }
 
+export async function updateLocalSessionTitle(id: string, title: string) {
+  const s = await getRaw(id);
+  if (!s) return;
+  s.title = title;
+  await put(s);
+}
+
 export async function updateLocalSessionStateMap(id: string, map: CurrentStateMap) {
   const s = await getRaw(id);
   if (!s) return;

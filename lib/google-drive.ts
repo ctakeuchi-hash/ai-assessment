@@ -98,14 +98,16 @@ function buildContent(session: SessionDetail, suggestions: CopilotSuggestion[], 
   return { runs, bulletRanges };
 }
 
-async function getOrCreateFolder(drive: ReturnType<typeof google.drive>, name: string): Promise<string> {
+async function getOrCreateFolder(drive: ReturnType<typeof google.drive>, name: string, parentId?: string): Promise<string> {
+  const escapedName = name.replace(/'/g, "\\'");
+  const parentClause = parentId ? ` and '${parentId}' in parents` : '';
   const existing = await drive.files.list({
-    q: `name='${name}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    q: `name='${escapedName}' and mimeType='application/vnd.google-apps.folder' and trashed=false${parentClause}`,
     fields: 'files(id)',
   });
   if (existing.data.files && existing.data.files.length > 0) return existing.data.files[0].id!;
   const created = await drive.files.create({
-    requestBody: { name, mimeType: 'application/vnd.google-apps.folder' },
+    requestBody: { name, mimeType: 'application/vnd.google-apps.folder', parents: parentId ? [parentId] : undefined },
     fields: 'id',
   });
   return created.data.id!;
@@ -126,9 +128,11 @@ export async function createBrandedDoc(
   const created = await docs.documents.create({ requestBody: { title: `${clientName || 'Client'} — DragonScale Proposal` } });
   const documentId = created.data.documentId!;
 
-  // Only reachable when deployed (Vercel sets VERCEL_URL); Docs API needs a
-  // publicly fetchable image URL, so skip the logo when running locally.
-  const logoUri = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}/dragonscale-logo.png` : undefined;
+  // Docs API needs a publicly fetchable image URL — VERCEL_URL points at the
+  // per-deployment URL, which sits behind Vercel's deployment protection (SSO
+  // wall) and Google can't fetch through that. The custom domain isn't
+  // protected, so use it directly; skip the logo when running locally.
+  const logoUri = process.env.VERCEL_URL ? 'https://www.dragonscale.consulting/dragonscale-logo.png' : undefined;
   const textStart = logoUri ? 2 : 1;
 
   const { runs, bulletRanges } = buildContent(session, suggestions, clientName, consultantName);
@@ -172,7 +176,9 @@ export async function createBrandedDoc(
 
   await docs.documents.batchUpdate({ documentId, requestBody: { requests } });
 
-  const folderId = await getOrCreateFolder(drive, 'DragonScale Follow-Ups');
+  const rootFolderId = await getOrCreateFolder(drive, 'DragonScale Follow-Ups');
+  const folderDate = new Date(session.created_at).toISOString().slice(0, 10);
+  const folderId = await getOrCreateFolder(drive, `${clientName || 'Client'} — ${folderDate}`, rootFolderId);
   const existingParents = await drive.files.get({ fileId: documentId, fields: 'parents' });
   const result = await drive.files.update({
     fileId: documentId,

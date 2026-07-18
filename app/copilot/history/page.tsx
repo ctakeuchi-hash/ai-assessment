@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { listSessions, getSession, getSessionSegments, getSessionSuggestions } from '@/lib/session';
+import { listSessions, getSession, getSessionSegments, getSessionSuggestions, updateSessionTitle } from '@/lib/session';
 import type { SessionRow, SessionDetail } from '@/lib/session';
 import type { TranscriptSegment, CopilotSuggestion } from '@/types';
 import { ClientBrief } from '@/components/copilot/ClientBrief';
@@ -41,10 +41,34 @@ export default function HistoryPage() {
   const [crmNextAction, setCrmNextAction] = useState('');
   const [pushingCRM, setPushingCRM] = useState(false);
   const [crmPushed, setCrmPushed] = useState(false);
+  const [search, setSearch] = useState('');
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   useEffect(() => {
     listSessions().then(rows => { setSessions(rows); setLoading(false); });
   }, []);
+
+  const filteredSessions = sessions.filter(s => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (s.title ?? '').toLowerCase().includes(q) || (s.summary_tldr ?? '').toLowerCase().includes(q);
+  });
+
+  const startRename = (s: SessionRow) => {
+    setRenamingId(s.id);
+    setRenameValue(s.title ?? '');
+  };
+
+  const commitRename = async () => {
+    if (!renamingId) return;
+    const title = renameValue.trim();
+    if (title) {
+      await updateSessionTitle(renamingId, title);
+      setSessions(prev => prev.map(s => (s.id === renamingId ? { ...s, title } : s)));
+    }
+    setRenamingId(null);
+  };
 
   const selectSession = async (id: string) => {
     setSelectedId(id);
@@ -169,20 +193,42 @@ export default function HistoryPage() {
           </span>
         </div>
 
+        <div style={{ padding: '0.65rem 1.25rem', borderBottom: '1px solid #1c2030' }}>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by client or summary…"
+            style={{
+              width: '100%',
+              boxSizing: 'border-box',
+              fontFamily: "'DM Mono', monospace",
+              fontSize: '0.68rem',
+              color: '#b8ccdc',
+              background: '#0e1018',
+              border: '1px solid #1c2030',
+              borderRadius: 4,
+              padding: '0.45rem 0.6rem',
+            }}
+          />
+        </div>
+
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {loading ? (
             <div style={{ padding: '2rem', color: '#2a3040', fontFamily: "'DM Mono', monospace", fontSize: '0.7rem', textAlign: 'center' }}>
               Loading…
             </div>
-          ) : sessions.length === 0 ? (
+          ) : filteredSessions.length === 0 ? (
             <div style={{ padding: '2rem', color: '#2a3040', fontFamily: "'DM Mono', monospace", fontSize: '0.7rem', textAlign: 'center', lineHeight: 1.7 }}>
-              No sessions yet.<br />Start recording to save a call.
+              {sessions.length === 0 ? <>No sessions yet.<br />Start recording to save a call.</> : 'No matches.'}
             </div>
           ) : (
-            sessions.map(s => (
-              <button
+            filteredSessions.map(s => (
+              <div
                 key={s.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => selectSession(s.id)}
+                onKeyDown={e => { if (e.key === 'Enter') selectSession(s.id); }}
                 style={{
                   width: '100%',
                   textAlign: 'left',
@@ -193,18 +239,44 @@ export default function HistoryPage() {
                   cursor: 'pointer',
                 }}
               >
+                {renamingId === s.id ? (
+                  <input
+                    autoFocus
+                    value={renameValue}
+                    onClick={e => e.stopPropagation()}
+                    onChange={e => setRenameValue(e.target.value)}
+                    onBlur={commitRename}
+                    onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') setRenamingId(null); }}
+                    style={{
+                      width: '100%',
+                      boxSizing: 'border-box',
+                      fontSize: '0.82rem',
+                      color: '#b8ccdc',
+                      background: '#161a24',
+                      border: '1px solid #38d4a0',
+                      borderRadius: 3,
+                      padding: '0.15rem 0.3rem',
+                      marginBottom: '0.25rem',
+                    }}
+                  />
+                ) : (
+                  <div
+                    onDoubleClick={e => { e.stopPropagation(); startRename(s); }}
+                    style={{ fontSize: '0.82rem', color: '#b8ccdc', marginBottom: '0.25rem', lineHeight: 1.4 }}
+                    title="Double-click to rename"
+                  >
+                    {s.title ?? 'Untitled'}
+                  </div>
+                )}
                 <div style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.6rem', color: '#3a4a60', marginBottom: '0.25rem' }}>
                   {formatDate(s.created_at)} · {duration(s.created_at, s.ended_at)}
-                </div>
-                <div style={{ fontSize: '0.82rem', color: '#b8ccdc', marginBottom: '0.25rem', lineHeight: 1.4 }}>
-                  {s.title ?? 'Untitled'}
                 </div>
                 {s.summary_tldr && (
                   <div style={{ fontSize: '0.72rem', color: '#3a4a60', lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>
                     {s.summary_tldr}
                   </div>
                 )}
-              </button>
+              </div>
             ))
           )}
         </div>
