@@ -1,6 +1,6 @@
 import { getSupabase } from './supabase';
 import * as local from './local-store';
-import type { TranscriptSegment, CopilotSuggestion, CurrentStateMap, SessionRow, SessionDetail } from '@/types';
+import type { TranscriptSegment, CopilotSuggestion, CurrentStateMap, FollowUpContent, SessionRow, SessionDetail } from '@/types';
 import type { MeetingSummary } from './anthropic';
 
 export type { SessionRow, SessionDetail };
@@ -62,6 +62,16 @@ export async function updateSessionTitle(sessionId: string, title: string) {
   }
   const { error } = await db.from('copilot_sessions').update({ title }).eq('id', sessionId);
   if (error) console.error('updateSessionTitle', error);
+}
+
+export async function updateSessionFollowUpContent(sessionId: string, content: FollowUpContent) {
+  const db = getSupabase();
+  if (!db) {
+    try { await local.updateLocalSessionFollowUpContent(sessionId, content); } catch (e) { console.error('updateSessionFollowUpContent (local)', e); }
+    return;
+  }
+  const { error } = await db.from('copilot_sessions').update({ followup_content: content }).eq('id', sessionId);
+  if (error) console.error('updateSessionFollowUpContent', error);
 }
 
 export async function updateSessionStateMap(sessionId: string, map: CurrentStateMap) {
@@ -135,7 +145,7 @@ export async function getSession(id: string): Promise<SessionDetail | null> {
   }
   const { data, error } = await db
     .from('copilot_sessions')
-    .select('id, created_at, ended_at, title, summary_tldr, summary_topics, summary_client_needs, summary_open_questions, current_state_map')
+    .select('id, created_at, ended_at, title, summary_tldr, summary_topics, summary_client_needs, summary_open_questions, current_state_map, followup_content')
     .eq('id', id)
     .single();
   if (error) { console.error('getSession', error); return null; }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { listSessions, getSession, getSessionSegments, getSessionSuggestions, updateSessionTitle } from '@/lib/session';
+import { listSessions, getSession, getSessionSegments, getSessionSuggestions, updateSessionTitle, updateSessionFollowUpContent } from '@/lib/session';
 import type { SessionRow, SessionDetail } from '@/lib/session';
 import type { TranscriptSegment, CopilotSuggestion, FollowUpContent } from '@/types';
 import { buildFollowUpContent } from '@/lib/followup-content';
@@ -84,10 +84,19 @@ export default function HistoryPage() {
     setSegments(segs);
     setSuggestions(suggs);
     setDetailTab('summary');
-    setFollowUpContent(null);
+    setFollowUpContent(d?.followup_content ?? null);
     setDocError(null);
     setDetailLoading(false);
   };
+
+  // Auto-save the draft as it's edited, so it's there again next time this
+  // session's Follow-Up tab is opened (debounced so every keystroke doesn't
+  // fire a request).
+  useEffect(() => {
+    if (!selectedId || !followUpContent) return;
+    const t = setTimeout(() => { updateSessionFollowUpContent(selectedId, followUpContent); }, 600);
+    return () => clearTimeout(t);
+  }, [selectedId, followUpContent]);
 
   // Snapshot, not live-bound: called only on demand so editing a draft mid-call
   // isn't blown away by the next suggestion/summary update.

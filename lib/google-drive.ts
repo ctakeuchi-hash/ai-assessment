@@ -29,14 +29,15 @@ interface Run {
 
 interface Range { start: number; end: number; }
 
-// Mirrors the pitch deck's 4 slides (components/copilot/PitchDeck.tsx) —
-// same headline copy, one Docs "page" per section via insertPageBreak,
-// card-style blocks via paragraph shading, since Docs styles by character/
-// paragraph range rather than by component tree.
+// Mirrors the one-pager PDF (components/copilot/FollowUpPDF.tsx) section for
+// section — same "// Section Label" headers, bullet-list challenges, card
+// solutions, single-line investment summary, bordered next-step box — rather
+// than the pitch deck's oversized per-section headlines, which read fine as
+// 4 slides but wasted most of each page once flowed into a regular document.
 function buildRuns(content: FollowUpContent, clientName: string, consultantName: string, date: string) {
   const runs: Run[] = [];
   const shadeRanges: Range[] = [];
-  const pageBreakOffsets: number[] = [];
+  const bulletRanges: Range[] = [];
   let ctaRange: Range | null = null;
   let offset = 1; // bumped to account for the logo image, see createBrandedDoc
 
@@ -45,13 +46,8 @@ function buildRuns(content: FollowUpContent, clientName: string, consultantName:
     offset += text.length;
   }
 
-  function eyebrow(label: string) {
-    push(`${label}\n`, { bold: true, color: TEAL, size: 8, fontFamily: MONO });
-  }
-
-  function headline(text: string) {
-    push(text, { bold: true, italic: true, size: 26, color: TEXT });
-    push('.\n\n', { bold: true, italic: true, size: 26, color: TEAL });
+  function label(text: string) {
+    push(`${text}\n`, { bold: true, color: TEAL, size: 8, fontFamily: MONO });
   }
 
   function card(fn: () => void) {
@@ -60,25 +56,26 @@ function buildRuns(content: FollowUpContent, clientName: string, consultantName:
     shadeRanges.push({ start, end: offset });
   }
 
+  function bulletList(items: { title: string; body: string }[]) {
+    const start = offset;
+    for (const item of items) {
+      push(`${item.title}: `, { bold: true, color: TEXT, size: 9.5 });
+      push(`${item.body}\n`, { color: MUTED, size: 9.5 });
+    }
+    bulletRanges.push({ start, end: offset });
+  }
+
   push(`${clientName || 'Client'}\n`, { bold: true, italic: true, size: 18, color: TEXT });
   push(`Prepared by ${consultantName || 'Consultant'} · ${date}\n\n`, { color: MUTED, size: 9, fontFamily: MONO });
 
-  // 01 — Our Understanding & The Challenge
-  eyebrow(`// PREPARED FOR ${(clientName || 'CLIENT').toUpperCase()}`);
-  headline('Where things stand');
-  push(`${content.understanding}\n\n`, { color: TEXT, size: 10.5 });
-  for (const c of content.challenges) {
-    card(() => {
-      push(`${c.title}\n`, { bold: true, color: TEXT, size: 11 });
-      push(`${c.body}\n`, { color: MUTED, size: 9.5 });
-    });
-    push('\n');
-  }
-  pageBreakOffsets.push(offset);
+  label('// Our Understanding');
+  push(`${content.understanding}\n\n`, { color: TEXT, size: 10 });
 
-  // 02 — Solution Overview
-  eyebrow('// THE SOLUTION');
-  headline('Our recommendation');
+  label('// The Challenge');
+  bulletList(content.challenges);
+  push('\n');
+
+  label('// The Solution');
   for (const s of content.solutions) {
     card(() => {
       push(`${s.headline}\n`, { bold: true, color: TEXT, size: 11 });
@@ -88,28 +85,22 @@ function buildRuns(content: FollowUpContent, clientName: string, consultantName:
     });
     push('\n');
   }
-  pageBreakOffsets.push(offset);
 
-  // 03 — Investment & Timeline
-  eyebrow('// INVESTMENT & TIMELINE');
-  headline('Priced to fit');
+  label('// Investment & Timeline');
   card(() => {
-    push(`Tier: ${content.tier.label}\n`, { bold: true, color: TEXT, size: 11 });
-    push(`Setup: ${content.tier.setup}     Monthly: ${content.tier.monthly}     Go-Live: ${content.goLive}\n`, { color: MUTED, size: 9.5 });
+    push(`Tier: ${content.tier.label}     Setup: ${content.tier.setup}     Monthly: ${content.tier.monthly}     Go-Live: ${content.goLive}\n`, { color: TEXT, size: 10 });
   });
   push('\n');
-  pageBreakOffsets.push(offset);
 
-  // 04 — Next Steps
-  eyebrow('// NEXT STEPS');
-  headline("Let's get started");
+  label('// Next Step');
   const ctaStart = offset;
-  push(`${content.nextStep}\n`, { color: TEXT, size: 10.5 });
+  push(`${content.nextStep}\n`, { color: TEXT, size: 10 });
   ctaRange = { start: ctaStart, end: offset };
   push('\n');
-  push(`DragonScale · ${consultantName || 'Consultant'} · ${date}\n`, { color: MUTED, size: 8, fontFamily: MONO });
 
-  return { runs, shadeRanges, ctaRange, pageBreakOffsets };
+  push(`DragonScale · ${consultantName || 'Consultant'} · ${date}   ·   Confidential\n`, { color: MUTED, size: 8, fontFamily: MONO });
+
+  return { runs, shadeRanges, bulletRanges, ctaRange };
 }
 
 async function getOrCreateFolder(drive: ReturnType<typeof google.drive>, name: string, parentId?: string): Promise<string> {
@@ -150,7 +141,7 @@ export async function createBrandedDoc(
   const textStart = logoUri ? 2 : 1;
 
   const date = new Date(sessionCreatedAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
-  const { runs, shadeRanges, ctaRange, pageBreakOffsets } = buildRuns(content, clientName, consultantName, date);
+  const { runs, shadeRanges, bulletRanges, ctaRange } = buildRuns(content, clientName, consultantName, date);
   const fullText = runs.map(r => r.text).join('');
 
   const requests: object[] = [];
@@ -230,12 +221,14 @@ export async function createBrandedDoc(
     });
   }
 
-  // Inserted last, in ascending order — each break shifts every later index
-  // by 1, so the i-th break (0-indexed) needs its precomputed offset bumped
-  // by i to account for the breaks already inserted before it.
-  pageBreakOffsets.forEach((point, i) => {
-    requests.push({ insertPageBreak: { location: { index: point + i } } });
-  });
+  for (const b of bulletRanges) {
+    requests.push({
+      createParagraphBullets: {
+        range: { startIndex: b.start, endIndex: b.end },
+        bulletPreset: 'BULLET_DISC_CIRCLE_SQUARE',
+      },
+    });
+  }
 
   await docs.documents.batchUpdate({ documentId, requestBody: { requests } });
 

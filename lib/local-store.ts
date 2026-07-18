@@ -1,4 +1,4 @@
-import type { TranscriptSegment, CopilotSuggestion, CurrentStateMap, SessionRow, SessionDetail } from '@/types';
+import type { TranscriptSegment, CopilotSuggestion, CurrentStateMap, FollowUpContent, SessionRow, SessionDetail } from '@/types';
 import type { MeetingSummary } from './anthropic';
 
 // Browser-only fallback store used when Supabase isn't configured. The app is
@@ -54,6 +54,7 @@ export async function createLocalSession(): Promise<string> {
     summary_client_needs: null,
     summary_open_questions: null,
     current_state_map: null,
+    followup_content: null,
     segments: [],
     suggestions: [],
   });
@@ -88,6 +89,13 @@ export async function updateLocalSessionTitle(id: string, title: string) {
   const s = await getRaw(id);
   if (!s) return;
   s.title = title;
+  await put(s);
+}
+
+export async function updateLocalSessionFollowUpContent(id: string, content: FollowUpContent) {
+  const s = await getRaw(id);
+  if (!s) return;
+  s.followup_content = content;
   await put(s);
 }
 

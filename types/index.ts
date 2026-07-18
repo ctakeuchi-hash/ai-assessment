@@ -98,4 +98,5 @@ export interface SessionDetail {
   summary_client_needs: string[] | null;
   summary_open_questions: string[] | null;
   current_state_map: CurrentStateMap | null;
+  followup_content: FollowUpContent | null;
 }
