@@ -1,17 +1,22 @@
-import { Document, Page, Text, View, Image, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer';
 import path from 'path';
 import type { SessionDetail } from '@/lib/session';
 import type { CopilotSuggestion } from '@/types';
 
-// DragonScale brand
-const BRAND_DARK = '#08090f';
-const BRAND_TEAL = '#38d4a0';
-const BRAND_TEAL_TEXT = '#0d9488'; // darker shade of the brand teal for readable text on white
+// DragonScale brand — same dark/teal system as the live Copilot UI and the
+// pitch deck (components/copilot/PitchDeck.tsx).
+const BG = '#08090f';
+const CARD = '#0e1018';
+const BORDER = '#1c2030';
+const TEAL = '#38d4a0';
+const TEXT = '#e8f0f5';
+const MUTED = '#8ea0b4';
+const FAINT = '#5a6b80';
 const LOGO_PATH = path.join(process.cwd(), 'public', 'dragonscale-logo.png');
 
 const styles = StyleSheet.create({
   page: {
-    backgroundColor: '#ffffff',
+    backgroundColor: BG,
     fontFamily: 'Helvetica',
   },
   body: {
@@ -19,35 +24,35 @@ const styles = StyleSheet.create({
     paddingTop: 24,
   },
   header: {
-    backgroundColor: BRAND_DARK,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 24,
     paddingHorizontal: 48,
-    marginBottom: 28,
+    marginBottom: 8,
   },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   logo: {
     width: 100,
     height: 45, // matches the source lockup's 720:326 aspect ratio
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   label: {
+    fontFamily: 'Courier-Bold',
     fontSize: 7,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
-    color: BRAND_TEAL,
+    color: TEAL,
     marginBottom: 4,
   },
   clientName: {
-    fontSize: 18,
-    fontFamily: 'Helvetica-Bold',
-    color: '#ffffff',
+    fontFamily: 'Helvetica-BoldOblique',
+    fontSize: 20,
+    color: TEXT,
     marginBottom: 2,
   },
   headerMeta: {
     fontSize: 9,
-    color: '#8ab0a0',
+    color: MUTED,
   },
   consultantBlock: {
     alignItems: 'flex-end',
@@ -55,29 +60,23 @@ const styles = StyleSheet.create({
   consultantName: {
     fontSize: 10,
     fontFamily: 'Helvetica-Bold',
-    color: '#ffffff',
+    color: TEXT,
     marginBottom: 2,
   },
   section: {
     marginBottom: 22,
   },
   sectionLabel: {
+    fontFamily: 'Courier-Bold',
     fontSize: 7,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
-    color: BRAND_TEAL_TEXT,
+    color: TEAL,
     marginBottom: 6,
-    fontFamily: 'Helvetica-Bold',
-  },
-  sectionTitle: {
-    fontSize: 11,
-    fontFamily: 'Helvetica-Bold',
-    color: '#0f172a',
-    marginBottom: 8,
   },
   bodyText: {
     fontSize: 9.5,
-    color: '#334155',
+    color: MUTED,
     lineHeight: 1.6,
   },
   bullet: {
@@ -87,35 +86,36 @@ const styles = StyleSheet.create({
   },
   bulletDot: {
     fontSize: 9.5,
-    color: '#475569',
+    color: TEAL,
     marginRight: 6,
     lineHeight: 1.6,
   },
   bulletText: {
     fontSize: 9.5,
-    color: '#334155',
+    color: MUTED,
     lineHeight: 1.6,
     flex: 1,
   },
   divider: {
-    borderBottom: '0.5pt solid #ccf0e4',
+    borderBottom: `0.5pt solid ${BORDER}`,
     marginBottom: 20,
   },
   solutionCard: {
-    backgroundColor: '#f2fbf8',
-    border: '0.5pt solid #ccf0e4',
+    backgroundColor: CARD,
+    border: `0.75pt solid ${BORDER}`,
+    borderRadius: 4,
     padding: 12,
     marginBottom: 10,
   },
   solutionHeadline: {
-    fontSize: 10,
-    fontFamily: 'Helvetica-Bold',
-    color: '#0f172a',
+    fontFamily: 'Helvetica-BoldOblique',
+    fontSize: 11,
+    color: TEXT,
     marginBottom: 4,
   },
   solutionBody: {
     fontSize: 9,
-    color: '#475569',
+    color: MUTED,
     lineHeight: 1.55,
   },
   pricingRow: {
@@ -125,19 +125,19 @@ const styles = StyleSheet.create({
   },
   pricingChip: {
     fontSize: 8,
-    color: '#0f172a',
-    backgroundColor: '#f1f5f9',
+    color: MUTED,
+    border: `0.5pt solid ${BORDER}`,
+    borderRadius: 3,
     paddingVertical: 3,
     paddingHorizontal: 7,
-    border: '0.5pt solid #cbd5e1',
   },
   benefitChip: {
     fontSize: 8,
-    color: BRAND_TEAL_TEXT,
-    backgroundColor: '#e6faf3',
+    color: TEAL,
+    border: `0.5pt solid ${TEAL}`,
+    borderRadius: 3,
     paddingVertical: 3,
     paddingHorizontal: 7,
-    border: `0.5pt solid ${BRAND_TEAL}`,
   },
   investmentGrid: {
     flexDirection: 'row',
@@ -145,36 +145,39 @@ const styles = StyleSheet.create({
   },
   investmentBox: {
     flex: 1,
-    backgroundColor: '#f8fafc',
-    border: '0.5pt solid #e2e8f0',
+    backgroundColor: CARD,
+    border: `0.75pt solid ${BORDER}`,
+    borderRadius: 4,
     padding: 12,
   },
   investmentLabel: {
+    fontFamily: 'Courier-Bold',
     fontSize: 7,
     letterSpacing: 1,
     textTransform: 'uppercase',
-    color: '#94a3b8',
+    color: TEAL,
     marginBottom: 4,
-    fontFamily: 'Helvetica-Bold',
   },
   investmentValue: {
-    fontSize: 11,
-    fontFamily: 'Helvetica-Bold',
-    color: '#0f172a',
+    fontFamily: 'Helvetica-BoldOblique',
+    fontSize: 13,
+    color: TEXT,
   },
   investmentSub: {
     fontSize: 8,
-    color: '#64748b',
+    color: FAINT,
     marginTop: 2,
   },
   nextStep: {
-    backgroundColor: BRAND_DARK,
+    backgroundColor: CARD,
+    border: `1pt solid ${TEAL}`,
+    borderRadius: 4,
     padding: 14,
     marginTop: 8,
   },
   nextStepText: {
     fontSize: 9.5,
-    color: '#f8fafc',
+    color: TEXT,
     lineHeight: 1.6,
   },
   footer: {
@@ -185,25 +188,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTop: `0.5pt solid ${BRAND_TEAL}`,
+    borderTop: `0.5pt solid ${BORDER}`,
     paddingTop: 10,
   },
   footerText: {
     fontSize: 8,
-    color: '#64748b',
+    color: FAINT,
   },
   footerBrand: {
+    fontFamily: 'Courier-Bold',
     fontSize: 7,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
-    fontFamily: 'Helvetica-Bold',
-    color: BRAND_TEAL_TEXT,
+    color: TEAL,
   },
   confidential: {
+    fontFamily: 'Courier',
     fontSize: 7,
     letterSpacing: 1,
     textTransform: 'uppercase',
-    color: '#cbd5e1',
+    color: FAINT,
   },
 });
 
@@ -219,12 +223,9 @@ export function FollowUpPDF({ session, suggestions, clientName, consultantName }
 
   const solutionSuggestions = suggestions.filter(s => s.type === 'solution' || s.type === 'workflow').slice(0, 3);
   const clientNeeds = session.summary_client_needs ?? [];
-  const openQuestions = session.summary_open_questions ?? [];
   const processes = session.current_state_map?.processes ?? [];
   const highPainAreas = processes.filter(p => p.opportunitySize === 'high' || p.painPoints.length > 0);
 
-  // Pick the highest-tier pricing from suggestions
-  const topSuggestion = solutionSuggestions[0];
   const hasGrowth = solutionSuggestions.some(s => s.pricingTier?.toLowerCase().includes('growth'));
   const hasStarter = solutionSuggestions.some(s => s.pricingTier?.toLowerCase().includes('starter'));
   const tier = hasGrowth ? { label: 'Growth', setup: '$4,000–8,000', monthly: '$600/mo' }
@@ -255,7 +256,7 @@ export function FollowUpPDF({ session, suggestions, clientName, consultantName }
 
         {/* Our Understanding */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Our Understanding</Text>
+          <Text style={styles.sectionLabel}>// Our Understanding</Text>
           {session.summary_tldr ? (
             <Text style={styles.bodyText}>{session.summary_tldr}</Text>
           ) : (
@@ -267,13 +268,13 @@ export function FollowUpPDF({ session, suggestions, clientName, consultantName }
 
         {/* The Challenge */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>The Challenge</Text>
+          <Text style={styles.sectionLabel}>// The Challenge</Text>
           {highPainAreas.length > 0 ? (
             highPainAreas.slice(0, 3).map((p, i) => (
               <View key={i} style={styles.bullet}>
                 <Text style={styles.bulletDot}>·</Text>
                 <Text style={styles.bulletText}>
-                  <Text style={{ fontFamily: 'Helvetica-Bold' }}>{p.area}: </Text>
+                  <Text style={{ fontFamily: 'Helvetica-Bold', color: TEXT }}>{p.area}: </Text>
                   {p.currentState}{p.painPoints.length > 0 ? ` — ${p.painPoints[0]}` : ''}
                 </Text>
               </View>
@@ -294,7 +295,7 @@ export function FollowUpPDF({ session, suggestions, clientName, consultantName }
 
         {/* The Solution */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>The Solution</Text>
+          <Text style={styles.sectionLabel}>// The Solution</Text>
           {solutionSuggestions.length > 0 ? (
             solutionSuggestions.map((s, i) => (
               <View key={i} style={styles.solutionCard}>
@@ -318,7 +319,7 @@ export function FollowUpPDF({ session, suggestions, clientName, consultantName }
 
         {/* Investment & Timeline */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Investment &amp; Timeline</Text>
+          <Text style={styles.sectionLabel}>// Investment &amp; Timeline</Text>
           {tier ? (
             <View style={styles.investmentGrid}>
               <View style={styles.investmentBox}>

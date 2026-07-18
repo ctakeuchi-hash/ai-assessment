@@ -31,6 +31,7 @@ export default function HistoryPage() {
   const [clientName, setClientName] = useState('');
   const [consultantName, setConsultantName] = useState('');
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [generatingDeck, setGeneratingDeck] = useState(false);
   const [exportingDoc, setExportingDoc] = useState(false);
   const [docError, setDocError] = useState<string | null>(null);
   const [showCRMModal, setShowCRMModal] = useState(false);
@@ -85,11 +86,11 @@ export default function HistoryPage() {
     setDetailLoading(false);
   };
 
-  const generateFollowUp = async () => {
+  const downloadPDF = async (endpoint: string, setBusy: (v: boolean) => void, fallbackName: string) => {
     if (!selectedId || !detail) return;
-    setGeneratingPDF(true);
+    setBusy(true);
     try {
-      const res = await fetch('/api/generate-followup', {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session: detail, suggestions, clientName, consultantName }),
@@ -99,13 +100,16 @@ export default function HistoryPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = res.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') ?? 'proposal.pdf';
+      a.download = res.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') ?? fallbackName;
       a.click();
       URL.revokeObjectURL(url);
       setShowFollowUpModal(false);
     } catch {}
-    setGeneratingPDF(false);
+    setBusy(false);
   };
+
+  const generateFollowUp = () => downloadPDF('/api/generate-followup', setGeneratingPDF, 'proposal.pdf');
+  const generatePitchDeck = () => downloadPDF('/api/generate-pitchdeck', setGeneratingDeck, 'pitch-deck.pdf');
 
   const exportToGoogleDoc = async () => {
     if (!detail) return;
@@ -446,27 +450,38 @@ export default function HistoryPage() {
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button
-                onClick={generateFollowUp}
-                disabled={generatingPDF}
-                style={{ flex: 1, fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: generatingPDF ? '#3a4a60' : '#08090f', background: generatingPDF ? '#1c2030' : '#38d4a0', border: 'none', padding: '0.65rem', cursor: generatingPDF ? 'not-allowed' : 'pointer' }}
-              >
-                {generatingPDF ? 'Generating…' : 'Download PDF'}
-              </button>
-              <button
-                onClick={exportToGoogleDoc}
-                disabled={exportingDoc}
-                style={{ flex: 1, fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: exportingDoc ? '#3a4a60' : '#4a9eff', background: 'none', border: `1px solid ${exportingDoc ? '#1c2030' : '#0a1830'}`, padding: '0.65rem', cursor: exportingDoc ? 'not-allowed' : 'pointer' }}
-              >
-                {exportingDoc ? 'Exporting…' : 'Export to Google Doc'}
-              </button>
-              <button
-                onClick={() => setShowFollowUpModal(false)}
-                style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#3a4a60', background: 'none', border: '1px solid #1c2030', padding: '0.65rem 1rem', cursor: 'pointer' }}
-              >
-                Cancel
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              <div style={{ display: 'flex', gap: '0.6rem' }}>
+                <button
+                  onClick={generateFollowUp}
+                  disabled={generatingPDF}
+                  style={{ flex: 1, fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: generatingPDF ? '#3a4a60' : '#08090f', background: generatingPDF ? '#1c2030' : '#38d4a0', border: 'none', padding: '0.65rem', cursor: generatingPDF ? 'not-allowed' : 'pointer' }}
+                >
+                  {generatingPDF ? 'Generating…' : 'One-Pager PDF'}
+                </button>
+                <button
+                  onClick={generatePitchDeck}
+                  disabled={generatingDeck}
+                  style={{ flex: 1, fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: generatingDeck ? '#3a4a60' : '#08090f', background: generatingDeck ? '#1c2030' : '#38d4a0', border: 'none', padding: '0.65rem', cursor: generatingDeck ? 'not-allowed' : 'pointer' }}
+                >
+                  {generatingDeck ? 'Generating…' : 'Pitch Deck (4 slides)'}
+                </button>
+              </div>
+              <div style={{ display: 'flex', gap: '0.6rem' }}>
+                <button
+                  onClick={exportToGoogleDoc}
+                  disabled={exportingDoc}
+                  style={{ flex: 1, fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: exportingDoc ? '#3a4a60' : '#4a9eff', background: 'none', border: `1px solid ${exportingDoc ? '#1c2030' : '#0a1830'}`, padding: '0.65rem', cursor: exportingDoc ? 'not-allowed' : 'pointer' }}
+                >
+                  {exportingDoc ? 'Exporting…' : 'Export to Google Doc'}
+                </button>
+                <button
+                  onClick={() => setShowFollowUpModal(false)}
+                  style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#3a4a60', background: 'none', border: '1px solid #1c2030', padding: '0.65rem 1rem', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
