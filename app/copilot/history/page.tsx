@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { listSessions, getSession, getSessionSegments, getSessionSuggestions, updateSessionTitle } from '@/lib/session';
 import type { SessionRow, SessionDetail } from '@/lib/session';
-import type { TranscriptSegment, CopilotSuggestion } from '@/types';
+import type { TranscriptSegment, CopilotSuggestion, FollowUpContent } from '@/types';
+import { buildFollowUpContent } from '@/lib/followup-content';
 import { ClientBrief } from '@/components/copilot/ClientBrief';
 
 function formatDate(iso: string) {
@@ -16,7 +17,7 @@ function duration(start: string, end: string | null) {
   return mins < 1 ? '<1 min' : `${mins} min`;
 }
 
-type DetailView = 'summary' | 'transcript' | 'suggestions' | 'brief';
+type DetailView = 'summary' | 'transcript' | 'suggestions' | 'brief' | 'followup';
 
 export default function HistoryPage() {
   const [sessions, setSessions] = useState<SessionRow[]>([]);
@@ -27,7 +28,7 @@ export default function HistoryPage() {
   const [suggestions, setSuggestions] = useState<CopilotSuggestion[]>([]);
   const [detailTab, setDetailTab] = useState<DetailView>('summary');
   const [detailLoading, setDetailLoading] = useState(false);
-  const [showFollowUpModal, setShowFollowUpModal] = useState(false);
+  const [followUpContent, setFollowUpContent] = useState<FollowUpContent | null>(null);
   const [clientName, setClientName] = useState('');
   const [consultantName, setConsultantName] = useState('');
   const [generatingPDF, setGeneratingPDF] = useState(false);
@@ -83,17 +84,46 @@ export default function HistoryPage() {
     setSegments(segs);
     setSuggestions(suggs);
     setDetailTab('summary');
+    setFollowUpContent(null);
+    setDocError(null);
     setDetailLoading(false);
   };
 
+  // Snapshot, not live-bound: called only on demand so editing a draft mid-call
+  // isn't blown away by the next suggestion/summary update.
+  const populateFollowUp = () => {
+    if (!detail) return;
+    setFollowUpContent(buildFollowUpContent(detail, suggestions));
+  };
+
+  const updateChallenge = (i: number, field: 'title' | 'body', value: string) => {
+    setFollowUpContent(c => c && { ...c, challenges: c.challenges.map((ch, idx) => (idx === i ? { ...ch, [field]: value } : ch)) });
+  };
+  const removeChallenge = (i: number) => {
+    setFollowUpContent(c => c && { ...c, challenges: c.challenges.filter((_, idx) => idx !== i) });
+  };
+  const addChallenge = () => {
+    setFollowUpContent(c => c && { ...c, challenges: [...c.challenges, { title: '', body: '' }] });
+  };
+
+  const updateSolution = (i: number, field: 'headline' | 'body' | 'pricingTier' | 'keyBenefit', value: string) => {
+    setFollowUpContent(c => c && { ...c, solutions: c.solutions.map((s, idx) => (idx === i ? { ...s, [field]: value } : s)) });
+  };
+  const removeSolution = (i: number) => {
+    setFollowUpContent(c => c && { ...c, solutions: c.solutions.filter((_, idx) => idx !== i) });
+  };
+  const addSolution = () => {
+    setFollowUpContent(c => c && { ...c, solutions: [...c.solutions, { headline: '', body: '', pricingTier: '', keyBenefit: '' }] });
+  };
+
   const downloadPDF = async (endpoint: string, setBusy: (v: boolean) => void, fallbackName: string) => {
-    if (!selectedId || !detail) return;
+    if (!detail || !followUpContent) return;
     setBusy(true);
     try {
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session: detail, suggestions, clientName, consultantName }),
+        body: JSON.stringify({ content: followUpContent, clientName, consultantName, date: detail.created_at }),
       });
       if (!res.ok) throw new Error('Failed');
       const blob = await res.blob();
@@ -103,7 +133,6 @@ export default function HistoryPage() {
       a.download = res.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') ?? fallbackName;
       a.click();
       URL.revokeObjectURL(url);
-      setShowFollowUpModal(false);
     } catch {}
     setBusy(false);
   };
@@ -112,19 +141,18 @@ export default function HistoryPage() {
   const generatePitchDeck = () => downloadPDF('/api/generate-pitchdeck', setGeneratingDeck, 'pitch-deck.pdf');
 
   const exportToGoogleDoc = async () => {
-    if (!detail) return;
+    if (!detail || !followUpContent) return;
     setExportingDoc(true);
     setDocError(null);
     try {
       const res = await fetch('/api/export-to-doc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session: detail, suggestions, clientName, consultantName }),
+        body: JSON.stringify({ content: followUpContent, clientName, consultantName, date: detail.created_at }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create Google Doc');
       window.open(data.url, '_blank');
-      setShowFollowUpModal(false);
     } catch (e) {
       setDocError(e instanceof Error ? e.message : 'Failed to create Google Doc');
     }
@@ -169,6 +197,12 @@ export default function HistoryPage() {
     } catch {}
     setPushingCRM(false);
   };
+
+  const fieldLabel: React.CSSProperties = { fontFamily: "'DM Mono', monospace", fontSize: '0.55rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#3a4a60' };
+  const fieldInput: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: '#08090f', border: '1px solid #1c2030', color: '#ddd8cc', fontFamily: "'DM Mono', monospace", fontSize: '0.8rem', padding: '0.5rem 0.65rem', outline: 'none' };
+  const fieldTextarea: React.CSSProperties = { ...fieldInput, fontFamily: "'Outfit', sans-serif", fontSize: '0.85rem', lineHeight: 1.5, resize: 'vertical' as const, minHeight: 60 };
+  const removeBtn: React.CSSProperties = { fontFamily: "'DM Mono', monospace", fontSize: '0.65rem', color: '#5a6b80', background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem 0.4rem' };
+  const addBtn: React.CSSProperties = { alignSelf: 'flex-start', fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#38d4a0', background: 'none', border: '1px dashed #1c2030', padding: '0.4rem 0.75rem', cursor: 'pointer' };
 
   const tabStyle = (active: boolean) => ({
     fontFamily: "'DM Mono', monospace",
@@ -310,6 +344,9 @@ export default function HistoryPage() {
                 <button style={tabStyle(detailTab === 'transcript')} onClick={() => setDetailTab('transcript')}>
                   Transcript {segments.length > 0 && `(${segments.length})`}
                 </button>
+                <button style={tabStyle(detailTab === 'followup')} onClick={() => setDetailTab('followup')}>
+                  Follow-Up
+                </button>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', marginRight: '0.5rem' }}>
                 <button
@@ -317,12 +354,6 @@ export default function HistoryPage() {
                   style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.58rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: crmPushed ? '#38d4a0' : '#4a9eff', background: 'none', border: `1px solid ${crmPushed ? '#0a2818' : '#0a1830'}`, padding: '0.25rem 0.65rem', cursor: 'pointer', flexShrink: 0 }}
                 >
                   {crmPushed ? '✓ In CRM' : 'Push to CRM'}
-                </button>
-                <button
-                  onClick={() => setShowFollowUpModal(true)}
-                  style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.58rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#38d4a0', background: 'none', border: '1px solid #0a2818', padding: '0.25rem 0.65rem', cursor: 'pointer', flexShrink: 0 }}
-                >
-                  Generate Follow-Up PDF
                 </button>
               </div>
             </div>
@@ -413,79 +444,130 @@ export default function HistoryPage() {
                 </div>
               )}
 
+              {detailTab === 'followup' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: 680 }}>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label style={fieldLabel}>Client / Company Name</label>
+                      <input value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Acme Corp" style={fieldInput} />
+                    </div>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label style={fieldLabel}>Your Name</label>
+                      <input value={consultantName} onChange={e => setConsultantName(e.target.value)} placeholder="Your name" style={fieldInput} />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={populateFollowUp}
+                    style={{ alignSelf: 'flex-start', fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#08090f', background: '#38d4a0', border: 'none', padding: '0.6rem 1rem', cursor: 'pointer' }}
+                  >
+                    {followUpContent ? 'Re-Populate From Call' : 'Populate From Call'}
+                  </button>
+
+                  {!followUpContent ? (
+                    <div style={{ color: '#2a3040', fontFamily: "'DM Mono', monospace", fontSize: '0.72rem', lineHeight: 1.6 }}>
+                      This is a snapshot, not a live view — click above to pull the current summary and suggestions in as a draft, then edit before exporting. Re-click any time to refresh from the latest call data (this overwrites unsaved edits).
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                        <label style={fieldLabel}>// Our Understanding</label>
+                        <textarea
+                          value={followUpContent.understanding}
+                          onChange={e => setFollowUpContent(c => c && { ...c, understanding: e.target.value })}
+                          style={fieldTextarea}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <label style={fieldLabel}>// The Challenge</label>
+                        {followUpContent.challenges.map((c, i) => (
+                          <div key={i} style={{ background: '#0e1018', border: '1px solid #1c2030', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                              <input value={c.title} onChange={e => updateChallenge(i, 'title', e.target.value)} placeholder="Area" style={{ ...fieldInput, flex: 1, fontWeight: 600 }} />
+                              <button onClick={() => removeChallenge(i)} style={removeBtn} title="Remove">✕</button>
+                            </div>
+                            <textarea value={c.body} onChange={e => updateChallenge(i, 'body', e.target.value)} placeholder="Description" style={fieldTextarea} />
+                          </div>
+                        ))}
+                        <button onClick={addChallenge} style={addBtn}>+ Add Challenge</button>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <label style={fieldLabel}>// The Solution</label>
+                        {followUpContent.solutions.map((s, i) => (
+                          <div key={i} style={{ background: '#0e1018', border: '1px solid #1c2030', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                              <input value={s.headline} onChange={e => updateSolution(i, 'headline', e.target.value)} placeholder="Headline" style={{ ...fieldInput, flex: 1, fontWeight: 600 }} />
+                              <button onClick={() => removeSolution(i)} style={removeBtn} title="Remove">✕</button>
+                            </div>
+                            <textarea value={s.body} onChange={e => updateSolution(i, 'body', e.target.value)} placeholder="Description" style={fieldTextarea} />
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <input value={s.pricingTier} onChange={e => updateSolution(i, 'pricingTier', e.target.value)} placeholder="Pricing tier" style={{ ...fieldInput, flex: 1 }} />
+                              <input value={s.keyBenefit} onChange={e => updateSolution(i, 'keyBenefit', e.target.value)} placeholder="Key benefit" style={{ ...fieldInput, flex: 1 }} />
+                            </div>
+                          </div>
+                        ))}
+                        <button onClick={addSolution} style={addBtn}>+ Add Solution</button>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <label style={fieldLabel}>// Investment &amp; Timeline</label>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <input value={followUpContent.tier.label} onChange={e => setFollowUpContent(c => c && { ...c, tier: { ...c.tier, label: e.target.value } })} placeholder="Tier" style={{ ...fieldInput, flex: 1 }} />
+                          <input value={followUpContent.tier.setup} onChange={e => setFollowUpContent(c => c && { ...c, tier: { ...c.tier, setup: e.target.value } })} placeholder="Setup" style={{ ...fieldInput, flex: 1 }} />
+                          <input value={followUpContent.tier.monthly} onChange={e => setFollowUpContent(c => c && { ...c, tier: { ...c.tier, monthly: e.target.value } })} placeholder="Monthly" style={{ ...fieldInput, flex: 1 }} />
+                          <input value={followUpContent.goLive} onChange={e => setFollowUpContent(c => c && { ...c, goLive: e.target.value })} placeholder="Go-live" style={{ ...fieldInput, flex: 1 }} />
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                        <label style={fieldLabel}>// Next Step</label>
+                        <textarea
+                          value={followUpContent.nextStep}
+                          onChange={e => setFollowUpContent(c => c && { ...c, nextStep: e.target.value })}
+                          style={fieldTextarea}
+                        />
+                      </div>
+
+                      {docError && (
+                        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.68rem', color: '#e85858', lineHeight: 1.5 }}>
+                          {docError}
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', gap: '0.6rem' }}>
+                        <button
+                          onClick={generateFollowUp}
+                          disabled={generatingPDF}
+                          style={{ flex: 1, fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: generatingPDF ? '#3a4a60' : '#08090f', background: generatingPDF ? '#1c2030' : '#38d4a0', border: 'none', padding: '0.65rem', cursor: generatingPDF ? 'not-allowed' : 'pointer' }}
+                        >
+                          {generatingPDF ? 'Generating…' : 'One-Pager PDF'}
+                        </button>
+                        <button
+                          onClick={generatePitchDeck}
+                          disabled={generatingDeck}
+                          style={{ flex: 1, fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: generatingDeck ? '#3a4a60' : '#08090f', background: generatingDeck ? '#1c2030' : '#38d4a0', border: 'none', padding: '0.65rem', cursor: generatingDeck ? 'not-allowed' : 'pointer' }}
+                        >
+                          {generatingDeck ? 'Generating…' : 'Pitch Deck (4 slides)'}
+                        </button>
+                        <button
+                          onClick={exportToGoogleDoc}
+                          disabled={exportingDoc}
+                          style={{ flex: 1, fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: exportingDoc ? '#3a4a60' : '#4a9eff', background: 'none', border: `1px solid ${exportingDoc ? '#1c2030' : '#0a1830'}`, padding: '0.65rem', cursor: exportingDoc ? 'not-allowed' : 'pointer' }}
+                        >
+                          {exportingDoc ? 'Exporting…' : 'Export to Google Doc'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
             </div>
           </>
         )}
       </div>
-
-      {/* ── Follow-Up PDF Modal ── */}
-      {showFollowUpModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-          <div style={{ background: '#0e1018', border: '1px solid #1c2030', padding: '2rem', width: 400, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', color: '#f0ead8' }}>Generate Follow-Up PDF</div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <label style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.58rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#3a4a60' }}>Client / Company Name</label>
-              <input
-                value={clientName}
-                onChange={e => setClientName(e.target.value)}
-                placeholder="Acme Corp"
-                style={{ background: '#08090f', border: '1px solid #1c2030', color: '#ddd8cc', fontFamily: "'DM Mono', monospace", fontSize: '0.82rem', padding: '0.5rem 0.75rem', outline: 'none' }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <label style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.58rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#3a4a60' }}>Your Name</label>
-              <input
-                value={consultantName}
-                onChange={e => setConsultantName(e.target.value)}
-                placeholder="Your name"
-                style={{ background: '#08090f', border: '1px solid #1c2030', color: '#ddd8cc', fontFamily: "'DM Mono', monospace", fontSize: '0.82rem', padding: '0.5rem 0.75rem', outline: 'none' }}
-              />
-            </div>
-
-            {docError && (
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.68rem', color: '#e85858', lineHeight: 1.5 }}>
-                {docError}
-              </div>
-            )}
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-              <div style={{ display: 'flex', gap: '0.6rem' }}>
-                <button
-                  onClick={generateFollowUp}
-                  disabled={generatingPDF}
-                  style={{ flex: 1, fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: generatingPDF ? '#3a4a60' : '#08090f', background: generatingPDF ? '#1c2030' : '#38d4a0', border: 'none', padding: '0.65rem', cursor: generatingPDF ? 'not-allowed' : 'pointer' }}
-                >
-                  {generatingPDF ? 'Generating…' : 'One-Pager PDF'}
-                </button>
-                <button
-                  onClick={generatePitchDeck}
-                  disabled={generatingDeck}
-                  style={{ flex: 1, fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: generatingDeck ? '#3a4a60' : '#08090f', background: generatingDeck ? '#1c2030' : '#38d4a0', border: 'none', padding: '0.65rem', cursor: generatingDeck ? 'not-allowed' : 'pointer' }}
-                >
-                  {generatingDeck ? 'Generating…' : 'Pitch Deck (4 slides)'}
-                </button>
-              </div>
-              <div style={{ display: 'flex', gap: '0.6rem' }}>
-                <button
-                  onClick={exportToGoogleDoc}
-                  disabled={exportingDoc}
-                  style={{ flex: 1, fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: exportingDoc ? '#3a4a60' : '#4a9eff', background: 'none', border: `1px solid ${exportingDoc ? '#1c2030' : '#0a1830'}`, padding: '0.65rem', cursor: exportingDoc ? 'not-allowed' : 'pointer' }}
-                >
-                  {exportingDoc ? 'Exporting…' : 'Export to Google Doc'}
-                </button>
-                <button
-                  onClick={() => setShowFollowUpModal(false)}
-                  style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#3a4a60', background: 'none', border: '1px solid #1c2030', padding: '0.65rem 1rem', cursor: 'pointer' }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── CRM Push Modal ── */}
       {showCRMModal && (

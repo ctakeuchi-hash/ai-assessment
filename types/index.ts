@@ -58,6 +58,27 @@ export interface CurrentStateMap {
   timelineSignals: string[];
 }
 
+export interface FollowUpChallenge {
+  title: string;
+  body: string;
+}
+
+export interface FollowUpSolution {
+  headline: string;
+  body: string;
+  pricingTier: string;
+  keyBenefit: string;
+}
+
+export interface FollowUpContent {
+  understanding: string;
+  challenges: FollowUpChallenge[];
+  solutions: FollowUpSolution[];
+  tier: { label: string; setup: string; monthly: string };
+  goLive: string;
+  nextStep: string;
+}
+
 export interface SessionRow {
   id: string;
   created_at: string;

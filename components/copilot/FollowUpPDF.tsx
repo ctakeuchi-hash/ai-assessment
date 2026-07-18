@@ -1,7 +1,6 @@
 import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer';
 import path from 'path';
-import type { SessionDetail } from '@/lib/session';
-import type { CopilotSuggestion } from '@/types';
+import type { FollowUpContent } from '@/types';
 
 // DragonScale brand — same dark/teal system as the live Copilot UI and the
 // pitch deck (components/copilot/PitchDeck.tsx).
@@ -212,25 +211,14 @@ const styles = StyleSheet.create({
 });
 
 interface FollowUpPDFProps {
-  session: SessionDetail;
-  suggestions: CopilotSuggestion[];
+  content: FollowUpContent;
   clientName: string;
   consultantName: string;
+  date: string;
 }
 
-export function FollowUpPDF({ session, suggestions, clientName, consultantName }: FollowUpPDFProps) {
-  const date = new Date(session.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
-
-  const solutionSuggestions = suggestions.filter(s => s.type === 'solution' || s.type === 'workflow').slice(0, 3);
-  const clientNeeds = session.summary_client_needs ?? [];
-  const processes = session.current_state_map?.processes ?? [];
-  const highPainAreas = processes.filter(p => p.opportunitySize === 'high' || p.painPoints.length > 0);
-
-  const hasGrowth = solutionSuggestions.some(s => s.pricingTier?.toLowerCase().includes('growth'));
-  const hasStarter = solutionSuggestions.some(s => s.pricingTier?.toLowerCase().includes('starter'));
-  const tier = hasGrowth ? { label: 'Growth', setup: '$4,000–8,000', monthly: '$600/mo' }
-    : hasStarter ? { label: 'Starter', setup: '$1,500–3,000', monthly: '$300/mo' }
-    : null;
+export function FollowUpPDF({ content, clientName, consultantName, date: rawDate }: FollowUpPDFProps) {
+  const date = new Date(rawDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
 
   return (
     <Document>
@@ -257,11 +245,7 @@ export function FollowUpPDF({ session, suggestions, clientName, consultantName }
         {/* Our Understanding */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>// Our Understanding</Text>
-          {session.summary_tldr ? (
-            <Text style={styles.bodyText}>{session.summary_tldr}</Text>
-          ) : (
-            <Text style={styles.bodyText}>Based on our discovery conversation, we have developed a clear picture of where your business stands today and where automation can create the most leverage.</Text>
-          )}
+          <Text style={styles.bodyText}>{content.understanding}</Text>
         </View>
 
         <View style={styles.divider} />
@@ -269,26 +253,15 @@ export function FollowUpPDF({ session, suggestions, clientName, consultantName }
         {/* The Challenge */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>// The Challenge</Text>
-          {highPainAreas.length > 0 ? (
-            highPainAreas.slice(0, 3).map((p, i) => (
-              <View key={i} style={styles.bullet}>
-                <Text style={styles.bulletDot}>·</Text>
-                <Text style={styles.bulletText}>
-                  <Text style={{ fontFamily: 'Helvetica-Bold', color: TEXT }}>{p.area}: </Text>
-                  {p.currentState}{p.painPoints.length > 0 ? ` — ${p.painPoints[0]}` : ''}
-                </Text>
-              </View>
-            ))
-          ) : clientNeeds.length > 0 ? (
-            clientNeeds.slice(0, 4).map((need, i) => (
-              <View key={i} style={styles.bullet}>
-                <Text style={styles.bulletDot}>·</Text>
-                <Text style={styles.bulletText}>{need}</Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.bodyText}>Key operational challenges identified during our discovery conversation.</Text>
-          )}
+          {content.challenges.map((c, i) => (
+            <View key={i} style={styles.bullet}>
+              <Text style={styles.bulletDot}>·</Text>
+              <Text style={styles.bulletText}>
+                <Text style={{ fontFamily: 'Helvetica-Bold', color: TEXT }}>{c.title}: </Text>
+                {c.body}
+              </Text>
+            </View>
+          ))}
         </View>
 
         <View style={styles.divider} />
@@ -296,23 +269,16 @@ export function FollowUpPDF({ session, suggestions, clientName, consultantName }
         {/* The Solution */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>// The Solution</Text>
-          {solutionSuggestions.length > 0 ? (
-            solutionSuggestions.map((s, i) => (
-              <View key={i} style={styles.solutionCard}>
-                <Text style={styles.solutionHeadline}>{s.headline}</Text>
-                {s.proposedSolution && <Text style={styles.solutionBody}>{s.proposedSolution}</Text>}
-                <View style={styles.pricingRow}>
-                  {s.pricingTier && <Text style={styles.pricingChip}>{s.pricingTier}</Text>}
-                  {s.keyBenefit && <Text style={styles.benefitChip}>{s.keyBenefit}</Text>}
-                </View>
+          {content.solutions.map((s, i) => (
+            <View key={i} style={styles.solutionCard}>
+              <Text style={styles.solutionHeadline}>{s.headline}</Text>
+              {s.body && <Text style={styles.solutionBody}>{s.body}</Text>}
+              <View style={styles.pricingRow}>
+                {s.pricingTier && <Text style={styles.pricingChip}>{s.pricingTier}</Text>}
+                {s.keyBenefit && <Text style={styles.benefitChip}>{s.keyBenefit}</Text>}
               </View>
-            ))
-          ) : (
-            <View style={styles.solutionCard}>
-              <Text style={styles.solutionHeadline}>Custom Automation Suite</Text>
-              <Text style={styles.solutionBody}>Based on the processes discussed, we would design and implement an automation layer tailored to your team's workflows — reducing manual effort and ensuring nothing falls through the cracks.</Text>
             </View>
-          )}
+          ))}
         </View>
 
         <View style={styles.divider} />
@@ -320,48 +286,31 @@ export function FollowUpPDF({ session, suggestions, clientName, consultantName }
         {/* Investment & Timeline */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>// Investment &amp; Timeline</Text>
-          {tier ? (
-            <View style={styles.investmentGrid}>
-              <View style={styles.investmentBox}>
-                <Text style={styles.investmentLabel}>Tier</Text>
-                <Text style={styles.investmentValue}>{tier.label}</Text>
-                <Text style={styles.investmentSub}>Best fit based on scope</Text>
-              </View>
-              <View style={styles.investmentBox}>
-                <Text style={styles.investmentLabel}>Setup Investment</Text>
-                <Text style={styles.investmentValue}>{tier.setup}</Text>
-                <Text style={styles.investmentSub}>One-time implementation</Text>
-              </View>
-              <View style={styles.investmentBox}>
-                <Text style={styles.investmentLabel}>Monthly</Text>
-                <Text style={styles.investmentValue}>{tier.monthly}</Text>
-                <Text style={styles.investmentSub}>Ongoing support &amp; optimization</Text>
-              </View>
-              <View style={styles.investmentBox}>
-                <Text style={styles.investmentLabel}>Go-Live</Text>
-                <Text style={styles.investmentValue}>4 weeks</Text>
-                <Text style={styles.investmentSub}>From signed agreement</Text>
-              </View>
+          <View style={styles.investmentGrid}>
+            <View style={styles.investmentBox}>
+              <Text style={styles.investmentLabel}>Tier</Text>
+              <Text style={styles.investmentValue}>{content.tier.label}</Text>
+              <Text style={styles.investmentSub}>Best fit based on scope</Text>
             </View>
-          ) : (
-            <View style={styles.investmentGrid}>
-              <View style={styles.investmentBox}>
-                <Text style={styles.investmentLabel}>Approach</Text>
-                <Text style={styles.investmentValue}>Scoped after this call</Text>
-                <Text style={styles.investmentSub}>Proposal delivered same day</Text>
-              </View>
-              <View style={styles.investmentBox}>
-                <Text style={styles.investmentLabel}>Go-Live</Text>
-                <Text style={styles.investmentValue}>4 weeks</Text>
-                <Text style={styles.investmentSub}>From signed agreement</Text>
-              </View>
+            <View style={styles.investmentBox}>
+              <Text style={styles.investmentLabel}>Setup Investment</Text>
+              <Text style={styles.investmentValue}>{content.tier.setup}</Text>
+              <Text style={styles.investmentSub}>One-time implementation</Text>
             </View>
-          )}
+            <View style={styles.investmentBox}>
+              <Text style={styles.investmentLabel}>Monthly</Text>
+              <Text style={styles.investmentValue}>{content.tier.monthly}</Text>
+              <Text style={styles.investmentSub}>Ongoing support &amp; optimization</Text>
+            </View>
+            <View style={styles.investmentBox}>
+              <Text style={styles.investmentLabel}>Go-Live</Text>
+              <Text style={styles.investmentValue}>{content.goLive}</Text>
+              <Text style={styles.investmentSub}>From signed agreement</Text>
+            </View>
+          </View>
 
           <View style={styles.nextStep}>
-            <Text style={styles.nextStepText}>
-              Next step: 30-minute scoping call to confirm scope and finalize the proposal. I'll send a calendar link — or reply to this document with a time that works.
-            </Text>
+            <Text style={styles.nextStepText}>{content.nextStep}</Text>
           </View>
         </View>
 

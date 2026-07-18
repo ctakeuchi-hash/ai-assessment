@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import type { SessionDetail, CopilotSuggestion } from '@/types';
+import type { FollowUpContent } from '@/types';
 
 // Brand colors as 0-1 RGB (Docs API's TextStyle.foregroundColor format)
 const BRAND_TEAL = { red: 0.051, green: 0.588, blue: 0.533 }; // ~#0d9488
@@ -23,19 +23,7 @@ interface Run {
 // Flattens the same sections shown in the branded PDF (FollowUpPDF.tsx) into a
 // single text blob + style runs, since the Docs API styles by character range
 // rather than by component tree.
-function buildContent(session: SessionDetail, suggestions: CopilotSuggestion[], clientName: string, consultantName: string) {
-  const date = new Date(session.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
-  const solutionSuggestions = suggestions.filter(s => s.type === 'solution' || s.type === 'workflow').slice(0, 3);
-  const clientNeeds = session.summary_client_needs ?? [];
-  const processes = session.current_state_map?.processes ?? [];
-  const highPainAreas = processes.filter(p => p.opportunitySize === 'high' || p.painPoints.length > 0);
-
-  const hasGrowth = solutionSuggestions.some(s => s.pricingTier?.toLowerCase().includes('growth'));
-  const hasStarter = solutionSuggestions.some(s => s.pricingTier?.toLowerCase().includes('starter'));
-  const tier = hasGrowth ? { label: 'Growth', setup: '$4,000–8,000', monthly: '$600/mo' }
-    : hasStarter ? { label: 'Starter', setup: '$1,500–3,000', monthly: '$300/mo' }
-    : null;
-
+function buildRuns(content: FollowUpContent, clientName: string, consultantName: string, date: string) {
   const runs: Run[] = [];
   const bulletRanges: { start: number; end: number }[] = [];
   let offset = 1; // will be bumped to account for the logo image, see createBrandedDoc
@@ -59,41 +47,26 @@ function buildContent(session: SessionDetail, suggestions: CopilotSuggestion[], 
   push(`Prepared by ${consultantName || 'Consultant'} · ${date}\n\n`, { color: MUTED, size: 9 });
 
   heading('OUR UNDERSTANDING');
-  push(`${session.summary_tldr || 'Based on our discovery conversation, we have developed a clear picture of where your business stands today and where automation can create the most leverage.'}\n\n`);
+  push(`${content.understanding}\n\n`);
 
   heading('THE CHALLENGE');
-  if (highPainAreas.length > 0) {
-    bulletList(highPainAreas.slice(0, 3).map(p => `${p.area}: ${p.currentState}${p.painPoints.length ? ` — ${p.painPoints[0]}` : ''}`));
-  } else if (clientNeeds.length > 0) {
-    bulletList(clientNeeds.slice(0, 4));
-  } else {
-    push('Key operational challenges identified during our discovery conversation.\n');
-  }
+  bulletList(content.challenges.map(c => `${c.title}: ${c.body}`));
   push('\n');
 
   heading('THE SOLUTION');
-  if (solutionSuggestions.length > 0) {
-    for (const s of solutionSuggestions) {
-      push(`${s.headline}\n`, { bold: true });
-      if (s.proposedSolution) push(`${s.proposedSolution}\n`);
-      const chips = [s.pricingTier, s.keyBenefit].filter(Boolean).join('   ·   ');
-      if (chips) push(`${chips}\n`, { color: BRAND_TEAL, size: 9 });
-      push('\n');
-    }
-  } else {
-    push('Custom Automation Suite\n', { bold: true });
-    push("Based on the processes discussed, we would design and implement an automation layer tailored to your team's workflows.\n\n");
+  for (const s of content.solutions) {
+    push(`${s.headline}\n`, { bold: true });
+    if (s.body) push(`${s.body}\n`);
+    const chips = [s.pricingTier, s.keyBenefit].filter(Boolean).join('   ·   ');
+    if (chips) push(`${chips}\n`, { color: BRAND_TEAL, size: 9 });
+    push('\n');
   }
 
   heading('INVESTMENT & TIMELINE');
-  if (tier) {
-    push(`Tier: ${tier.label}     Setup: ${tier.setup}     Monthly: ${tier.monthly}     Go-Live: 4 weeks\n\n`);
-  } else {
-    push('Approach: Scoped after this call     Go-Live: 4 weeks from signed agreement\n\n');
-  }
+  push(`Tier: ${content.tier.label}     Setup: ${content.tier.setup}     Monthly: ${content.tier.monthly}     Go-Live: ${content.goLive}\n\n`);
 
   heading('NEXT STEP');
-  push("30-minute scoping call to confirm scope and finalize the proposal. I'll send a calendar link — or reply with a time that works.\n");
+  push(`${content.nextStep}\n`);
 
   return { runs, bulletRanges };
 }
@@ -114,10 +87,10 @@ async function getOrCreateFolder(drive: ReturnType<typeof google.drive>, name: s
 }
 
 export async function createBrandedDoc(
-  session: SessionDetail,
-  suggestions: CopilotSuggestion[],
+  content: FollowUpContent,
   clientName: string,
-  consultantName: string
+  consultantName: string,
+  sessionCreatedAt: string
 ): Promise<{ id: string; url: string }> {
   const auth = getOAuthClient();
   if (!auth) throw new Error("Google Drive isn't connected — set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REFRESH_TOKEN.");
@@ -135,7 +108,8 @@ export async function createBrandedDoc(
   const logoUri = process.env.VERCEL_URL ? 'https://www.dragonscale.consulting/dragonscale-logo.png' : undefined;
   const textStart = logoUri ? 2 : 1;
 
-  const { runs, bulletRanges } = buildContent(session, suggestions, clientName, consultantName);
+  const date = new Date(sessionCreatedAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+  const { runs, bulletRanges } = buildRuns(content, clientName, consultantName, date);
   const fullText = runs.map(r => r.text).join('');
 
   const requests: object[] = [];
@@ -177,7 +151,7 @@ export async function createBrandedDoc(
   await docs.documents.batchUpdate({ documentId, requestBody: { requests } });
 
   const rootFolderId = await getOrCreateFolder(drive, 'DragonScale Follow-Ups');
-  const folderDate = new Date(session.created_at).toISOString().slice(0, 10);
+  const folderDate = new Date(sessionCreatedAt).toISOString().slice(0, 10);
   const folderId = await getOrCreateFolder(drive, `${clientName || 'Client'} — ${folderDate}`, rootFolderId);
   const existingParents = await drive.files.get({ fileId: documentId, fields: 'parents' });
   const result = await drive.files.update({

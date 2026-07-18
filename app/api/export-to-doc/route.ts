@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createBrandedDoc } from '@/lib/google-drive';
-import type { SessionDetail, CopilotSuggestion } from '@/types';
+import type { FollowUpContent } from '@/types';
 
 export async function POST(req: NextRequest) {
-  const { session, suggestions, clientName, consultantName } = await req.json() as {
-    session: SessionDetail;
-    suggestions: CopilotSuggestion[];
+  const { content, clientName, consultantName, date } = await req.json() as {
+    content: FollowUpContent;
     clientName?: string;
     consultantName?: string;
+    date: string;
   };
 
-  if (!session) return NextResponse.json({ error: 'session required' }, { status: 400 });
+  if (!content) return NextResponse.json({ error: 'content required' }, { status: 400 });
 
   try {
-    const doc = await createBrandedDoc(session, suggestions ?? [], clientName || 'Client', consultantName || 'Consultant');
+    const doc = await createBrandedDoc(content, clientName || 'Client', consultantName || 'Consultant', date);
     return NextResponse.json(doc);
   } catch (e) {
     // GaxiosError from googleapis carries Google's real error_description in
