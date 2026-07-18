@@ -1,9 +1,14 @@
 import { google } from 'googleapis';
 import type { FollowUpContent } from '@/types';
 
-// Brand colors as 0-1 RGB (Docs API's TextStyle.foregroundColor format)
-const BRAND_TEAL = { red: 0.051, green: 0.588, blue: 0.533 }; // ~#0d9488
-const MUTED = { red: 0.4, green: 0.4, blue: 0.4 };
+// Same dark/teal system as the pitch deck and one-pager PDFs (0-1 RGB, as
+// required by the Docs API's Color/OptionalColor types).
+const PAGE_BG = { red: 0.0314, green: 0.0353, blue: 0.0588 }; // #08090f
+const CARD_BG = { red: 0.0549, green: 0.0627, blue: 0.0941 }; // #0e1018
+const TEAL = { red: 0.2196, green: 0.8314, blue: 0.6275 }; // #38d4a0
+const TEXT = { red: 0.9098, green: 0.9412, blue: 0.9608 }; // #e8f0f5
+const MUTED = { red: 0.5569, green: 0.6275, blue: 0.7059 }; // #8ea0b4
+const MONO = 'Courier New';
 
 function getOAuthClient() {
   const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN } = process.env;
@@ -16,59 +21,95 @@ function getOAuthClient() {
 interface Run {
   text: string;
   bold?: boolean;
+  italic?: boolean;
   color?: { red: number; green: number; blue: number };
   size?: number;
+  fontFamily?: string;
 }
 
-// Flattens the same sections shown in the branded PDF (FollowUpPDF.tsx) into a
-// single text blob + style runs, since the Docs API styles by character range
-// rather than by component tree.
+interface Range { start: number; end: number; }
+
+// Mirrors the pitch deck's 4 slides (components/copilot/PitchDeck.tsx) —
+// same headline copy, one Docs "page" per section via insertPageBreak,
+// card-style blocks via paragraph shading, since Docs styles by character/
+// paragraph range rather than by component tree.
 function buildRuns(content: FollowUpContent, clientName: string, consultantName: string, date: string) {
   const runs: Run[] = [];
-  const bulletRanges: { start: number; end: number }[] = [];
-  let offset = 1; // will be bumped to account for the logo image, see createBrandedDoc
+  const shadeRanges: Range[] = [];
+  const pageBreakOffsets: number[] = [];
+  let ctaRange: Range | null = null;
+  let offset = 1; // bumped to account for the logo image, see createBrandedDoc
 
   function push(text: string, style: Omit<Run, 'text'> = {}) {
     runs.push({ text, ...style });
     offset += text.length;
   }
 
-  function heading(label: string) {
-    push(`${label}\n`, { bold: true, color: BRAND_TEAL, size: 10 });
+  function eyebrow(label: string) {
+    push(`${label}\n`, { bold: true, color: TEAL, size: 8, fontFamily: MONO });
   }
 
-  function bulletList(items: string[]) {
+  function headline(text: string) {
+    push(text, { bold: true, italic: true, size: 26, color: TEXT });
+    push('.\n\n', { bold: true, italic: true, size: 26, color: TEAL });
+  }
+
+  function card(fn: () => void) {
     const start = offset;
-    for (const item of items) push(`${item}\n`);
-    bulletRanges.push({ start, end: offset });
+    fn();
+    shadeRanges.push({ start, end: offset });
   }
 
-  push(`${clientName || 'Client'}\n`, { bold: true, size: 20 });
-  push(`Prepared by ${consultantName || 'Consultant'} · ${date}\n\n`, { color: MUTED, size: 9 });
+  push(`${clientName || 'Client'}\n`, { bold: true, italic: true, size: 18, color: TEXT });
+  push(`Prepared by ${consultantName || 'Consultant'} · ${date}\n\n`, { color: MUTED, size: 9, fontFamily: MONO });
 
-  heading('OUR UNDERSTANDING');
-  push(`${content.understanding}\n\n`);
-
-  heading('THE CHALLENGE');
-  bulletList(content.challenges.map(c => `${c.title}: ${c.body}`));
-  push('\n');
-
-  heading('THE SOLUTION');
-  for (const s of content.solutions) {
-    push(`${s.headline}\n`, { bold: true });
-    if (s.body) push(`${s.body}\n`);
-    const chips = [s.pricingTier, s.keyBenefit].filter(Boolean).join('   ·   ');
-    if (chips) push(`${chips}\n`, { color: BRAND_TEAL, size: 9 });
+  // 01 — Our Understanding & The Challenge
+  eyebrow(`// PREPARED FOR ${(clientName || 'CLIENT').toUpperCase()}`);
+  headline('Where things stand');
+  push(`${content.understanding}\n\n`, { color: TEXT, size: 10.5 });
+  for (const c of content.challenges) {
+    card(() => {
+      push(`${c.title}\n`, { bold: true, color: TEXT, size: 11 });
+      push(`${c.body}\n`, { color: MUTED, size: 9.5 });
+    });
     push('\n');
   }
+  pageBreakOffsets.push(offset);
 
-  heading('INVESTMENT & TIMELINE');
-  push(`Tier: ${content.tier.label}     Setup: ${content.tier.setup}     Monthly: ${content.tier.monthly}     Go-Live: ${content.goLive}\n\n`);
+  // 02 — Solution Overview
+  eyebrow('// THE SOLUTION');
+  headline('Our recommendation');
+  for (const s of content.solutions) {
+    card(() => {
+      push(`${s.headline}\n`, { bold: true, color: TEXT, size: 11 });
+      if (s.body) push(`${s.body}\n`, { color: MUTED, size: 9.5 });
+      const chips = [s.pricingTier, s.keyBenefit].filter(Boolean).join('   ·   ');
+      if (chips) push(`${chips}\n`, { color: TEAL, size: 9, fontFamily: MONO });
+    });
+    push('\n');
+  }
+  pageBreakOffsets.push(offset);
 
-  heading('NEXT STEP');
-  push(`${content.nextStep}\n`);
+  // 03 — Investment & Timeline
+  eyebrow('// INVESTMENT & TIMELINE');
+  headline('Priced to fit');
+  card(() => {
+    push(`Tier: ${content.tier.label}\n`, { bold: true, color: TEXT, size: 11 });
+    push(`Setup: ${content.tier.setup}     Monthly: ${content.tier.monthly}     Go-Live: ${content.goLive}\n`, { color: MUTED, size: 9.5 });
+  });
+  push('\n');
+  pageBreakOffsets.push(offset);
 
-  return { runs, bulletRanges };
+  // 04 — Next Steps
+  eyebrow('// NEXT STEPS');
+  headline("Let's get started");
+  const ctaStart = offset;
+  push(`${content.nextStep}\n`, { color: TEXT, size: 10.5 });
+  ctaRange = { start: ctaStart, end: offset };
+  push('\n');
+  push(`DragonScale · ${consultantName || 'Consultant'} · ${date}\n`, { color: MUTED, size: 8, fontFamily: MONO });
+
+  return { runs, shadeRanges, ctaRange, pageBreakOffsets };
 }
 
 async function getOrCreateFolder(drive: ReturnType<typeof google.drive>, name: string, parentId?: string): Promise<string> {
@@ -109,10 +150,21 @@ export async function createBrandedDoc(
   const textStart = logoUri ? 2 : 1;
 
   const date = new Date(sessionCreatedAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
-  const { runs, bulletRanges } = buildRuns(content, clientName, consultantName, date);
+  const { runs, shadeRanges, ctaRange, pageBreakOffsets } = buildRuns(content, clientName, consultantName, date);
   const fullText = runs.map(r => r.text).join('');
 
   const requests: object[] = [];
+
+  // Dark page background, matching the deck/one-pager — must come with an
+  // explicit light color on every run below, since default Docs text is
+  // black and would be invisible against it.
+  requests.push({
+    updateDocumentStyle: {
+      documentStyle: { background: { color: { color: { rgbColor: PAGE_BG } } } },
+      fields: 'background',
+    },
+  });
+
   if (logoUri) {
     requests.push({
       insertInlineImage: {
@@ -128,25 +180,62 @@ export async function createBrandedDoc(
   for (const run of runs) {
     const start = cursor;
     const end = cursor + run.text.length;
-    if (run.bold || run.color || run.size) {
-      const textStyle: Record<string, unknown> = {};
-      const fields: string[] = [];
-      if (run.bold) { textStyle.bold = true; fields.push('bold'); }
-      if (run.color) { textStyle.foregroundColor = { color: { rgbColor: run.color } }; fields.push('foregroundColor'); }
-      if (run.size) { textStyle.fontSize = { magnitude: run.size, unit: 'PT' }; fields.push('fontSize'); }
+    const textStyle: Record<string, unknown> = {};
+    const fields: string[] = [];
+    if (run.bold) { textStyle.bold = true; fields.push('bold'); }
+    if (run.italic) { textStyle.italic = true; fields.push('italic'); }
+    if (run.color) { textStyle.foregroundColor = { color: { rgbColor: run.color } }; fields.push('foregroundColor'); }
+    if (run.size) { textStyle.fontSize = { magnitude: run.size, unit: 'PT' }; fields.push('fontSize'); }
+    if (run.fontFamily) { textStyle.weightedFontFamily = { fontFamily: run.fontFamily }; fields.push('weightedFontFamily'); }
+    if (fields.length > 0) {
       requests.push({ updateTextStyle: { range: { startIndex: start, endIndex: end }, textStyle, fields: fields.join(',') } });
     }
     cursor = end;
   }
 
-  for (const b of bulletRanges) {
+  const cardInset = { magnitude: 12, unit: 'PT' };
+  const cardSpace = { magnitude: 6, unit: 'PT' };
+  for (const r of shadeRanges) {
     requests.push({
-      createParagraphBullets: {
-        range: { startIndex: b.start, endIndex: b.end },
-        bulletPreset: 'BULLET_DISC_CIRCLE_SQUARE',
+      updateParagraphStyle: {
+        range: { startIndex: r.start, endIndex: r.end },
+        paragraphStyle: {
+          shading: { backgroundColor: { color: { rgbColor: CARD_BG } } },
+          indentStart: cardInset,
+          indentEnd: cardInset,
+          spaceAbove: cardSpace,
+          spaceBelow: cardSpace,
+        },
+        fields: 'shading,indentStart,indentEnd,spaceAbove,spaceBelow',
       },
     });
   }
+
+  if (ctaRange) {
+    const border = { width: { magnitude: 1, unit: 'PT' }, color: { color: { rgbColor: TEAL } }, dashStyle: 'SOLID', padding: { magnitude: 8, unit: 'PT' } };
+    requests.push({
+      updateParagraphStyle: {
+        range: { startIndex: ctaRange.start, endIndex: ctaRange.end },
+        paragraphStyle: {
+          shading: { backgroundColor: { color: { rgbColor: CARD_BG } } },
+          borderTop: border,
+          borderBottom: border,
+          borderLeft: border,
+          borderRight: border,
+          indentStart: cardInset,
+          indentEnd: cardInset,
+        },
+        fields: 'shading,borderTop,borderBottom,borderLeft,borderRight,indentStart,indentEnd',
+      },
+    });
+  }
+
+  // Inserted last, in ascending order — each break shifts every later index
+  // by 1, so the i-th break (0-indexed) needs its precomputed offset bumped
+  // by i to account for the breaks already inserted before it.
+  pageBreakOffsets.forEach((point, i) => {
+    requests.push({ insertPageBreak: { location: { index: point + i } } });
+  });
 
   await docs.documents.batchUpdate({ documentId, requestBody: { requests } });
 
