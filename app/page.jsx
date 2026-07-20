@@ -2,7 +2,7 @@
 
 import { useState, useLayoutEffect, useEffect } from "react";
 
-const VERSION = "2.1";
+const VERSION = "2.2";
 
 /* ── FONTS ── */
 const GFONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,400&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');`;
