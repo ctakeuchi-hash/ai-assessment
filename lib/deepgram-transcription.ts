@@ -50,11 +50,13 @@ export function startDeepgramTranscription(
     try {
       micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       rawStreams.push(micStream);
-    } catch {
+    } catch (err) {
+      onWarning?.(`Mic capture failed (${err instanceof Error ? err.message : err}) — using system audio only.`);
       return displayStream;
     }
 
     audioContext = new AudioContext();
+    if (audioContext.state === 'suspended') await audioContext.resume();
     const dest = audioContext.createMediaStreamDestination();
     audioContext.createMediaStreamSource(displayStream).connect(dest);
     audioContext.createMediaStreamSource(micStream).connect(dest);
