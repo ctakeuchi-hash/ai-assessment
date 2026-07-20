@@ -301,7 +301,7 @@ export default function CopilotPage() {
         )}
         {transcriptionMode === 'deepgram' && !recording && !audioWarning && (
           <div style={{ background: '#020810', borderBottom: '1px solid #0a1830', color: '#4a9eff', fontSize: '0.72rem', padding: '0.4rem 1.25rem', flexShrink: 0, fontFamily: "'DM Mono', monospace", letterSpacing: '0.04em' }}>
-            System mode: in the share dialog, pick a <strong>Chrome Tab</strong> (with "Share audio" checked) — not a Window or Screen.
+            System mode: in the share dialog, pick a <strong>Chrome Tab</strong> (with "Share audio" checked) — not a Window or Screen. You'll then get a separate mic permission prompt; allow it to capture both sides of the call.
           </div>
         )}
         {audioWarning && (

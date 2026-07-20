@@ -17,24 +17,48 @@ export function startDeepgramTranscription(
   let stream: MediaStream | null = null;
   let recorder: MediaRecorder | null = null;
   let cycleTimeout: ReturnType<typeof setTimeout> | null = null;
+  let audioContext: AudioContext | null = null;
+  let rawStreams: MediaStream[] = [];
+  let watchTrack: MediaStreamTrack | null = null;
 
+  // ponytail: mixes display (Zoom) audio + mic via Web Audio API rather than a
+  // real-time audio worklet — fine at this scale (single 2-source mix, no processing)
   async function getStream(): Promise<MediaStream> {
+    let displayStream: MediaStream | null = null;
     try {
-      const s = await navigator.mediaDevices.getDisplayMedia({
+      displayStream = await navigator.mediaDevices.getDisplayMedia({
         audio: { echoCancellation: false, noiseSuppression: false, sampleRate: 16000 } as MediaTrackConstraints,
         video: true,
       });
-      s.getVideoTracks().forEach(t => t.stop());
-
-      if (s.getAudioTracks().length === 0) {
-        onWarning?.('No audio captured — pick a Chrome Tab with "Share audio" checked, not a Window. Falling back to mic.');
-        return navigator.mediaDevices.getUserMedia({ audio: true });
-      }
-
-      return s;
+      displayStream.getVideoTracks().forEach(t => t.stop());
     } catch {
-      return navigator.mediaDevices.getUserMedia({ audio: true });
+      displayStream = null;
     }
+
+    if (!displayStream || displayStream.getAudioTracks().length === 0) {
+      onWarning?.('No system audio captured — pick a Chrome Tab with "Share audio" checked, not a Window. Using mic only.');
+      const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+      rawStreams = [mic];
+      watchTrack = mic.getAudioTracks()[0] ?? null;
+      return mic;
+    }
+
+    rawStreams = [displayStream];
+    watchTrack = displayStream.getAudioTracks()[0];
+
+    let micStream: MediaStream;
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      rawStreams.push(micStream);
+    } catch {
+      return displayStream;
+    }
+
+    audioContext = new AudioContext();
+    const dest = audioContext.createMediaStreamDestination();
+    audioContext.createMediaStreamSource(displayStream).connect(dest);
+    audioContext.createMediaStreamSource(micStream).connect(dest);
+    return dest.stream;
   }
 
   function runCycle() {
@@ -93,7 +117,7 @@ export function startDeepgramTranscription(
 
   getStream().then((s) => {
     stream = s;
-    s.getAudioTracks()[0]?.addEventListener('ended', () => {
+    watchTrack?.addEventListener('ended', () => {
       stopped = true;
       if (cycleTimeout) clearTimeout(cycleTimeout);
       onActivity?.(false);
@@ -109,6 +133,8 @@ export function startDeepgramTranscription(
       recorder.stop();
     }
     stream?.getTracks().forEach(t => t.stop());
+    rawStreams.forEach(s => s.getTracks().forEach(t => t.stop()));
+    audioContext?.close();
     onActivity?.(false);
   };
 }
