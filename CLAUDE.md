@@ -31,3 +31,4 @@ Bump the version when shipping meaningful changes.
 - `FROM_EMAIL` — verified sender address (e.g. `report@yourdomain.com`; defaults to `onboarding@resend.dev` for testing)
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — OAuth client for "Export to Google Doc" (Google Cloud Console)
 - `GOOGLE_REFRESH_TOKEN` — minted once via `scripts/google-auth-setup.mjs`, grants write access to the connected Google account's Drive
+- `ADMIN_PASSWORD` — shared password gating `/copilot`, `/build`, and the dashboard/backend API routes (see `middleware.ts`). The public assessment survey at `/` is not gated.
