@@ -99,7 +99,7 @@ async function sendAdminNotification({ email, company, industry, size, role, sco
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       from: `Assessment Bot <${from}>`,
-      to: ["ctakeuchi@gmail.com"],
+      to: ["ctakeuchi@gmail.com", "chris@dragonscale.consulting"],
       subject: `New Assessment: ${company || email} — ${maturity} (${overall}/36)`,
       html
     })

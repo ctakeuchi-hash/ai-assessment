@@ -10,13 +10,8 @@ export async function GET() {
   }
 
   try {
-    const fieldList = ["Email","Company Name","Industry","Company Size","Role",
-      "AI Readiness Score","Operations Score","Growth Score","Overall Score",
-      "Assessment Report","Full Report JSON","Submitted At"]
-    const qs = ["pageSize=100", ...fieldList.map(f => `fields[]=${encodeURIComponent(f)}`)].join("&")
-
     const res = await fetch(
-      `https://api.airtable.com/v0/${baseId}/${tableId}?${qs}`,
+      `https://api.airtable.com/v0/${baseId}/${tableId}?pageSize=100`,
       { headers: { Authorization: `Bearer ${pat}` } }
     )
 
