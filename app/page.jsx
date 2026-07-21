@@ -2,7 +2,7 @@
 
 import { useState, useLayoutEffect, useEffect } from "react";
 
-const VERSION = "2.3";
+const VERSION = "2.4";
 
 /* ── FONTS ── */
 const GFONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,400&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');`;
@@ -524,7 +524,7 @@ const MATURITY = (s, max) => {
 const STEPS = ["Your Business","Readiness","Operations","Growth","Industry","Report"];
 
 export default function App() {
-  const [isPublic] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).has("public"));
+  const [isPublic] = useState(() => typeof window !== "undefined" && (window.location.pathname === "/assessment" || new URLSearchParams(window.location.search).has("public")));
   const [step, setStep] = useState("intro");
   const [biz, setBiz] = useState({company:"",industry:"",size:"",role:"",email:""});
   const [ans, setAns] = useState({ai:{},ops:{},growth:{},deep:{}});
